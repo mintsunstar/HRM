@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { usersApi } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { useToastStore } from '@/components/common/Toast';
-import type { User } from '@/types';
+import type { User, UserLevel } from '@/types';
 import { LoadingSpinner } from '@/components/common/Loading';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -39,7 +39,9 @@ export function Employees() {
     employeeId: '',
     department: '',
     position: '',
-    level: 3,
+    level: 3 as UserLevel,
+    isActive: true,
+    joinDate: new Date().toISOString().split('T')[0],
   });
 
   useEffect(() => {
@@ -129,7 +131,9 @@ export function Employees() {
         employeeId: '',
         department: '',
         position: '',
-        level: 3,
+        level: 3 as UserLevel,
+        isActive: true,
+        joinDate: new Date().toISOString().split('T')[0],
       });
       fetchEmployees();
     } catch (error) {
@@ -390,7 +394,7 @@ export function Employees() {
               { value: '1', label: 'Super Admin (Level 1)' },
             ]}
             value={String(inviteForm.level)}
-            onChange={(e) => setInviteForm({ ...inviteForm, level: Number(e.target.value) })}
+            onChange={(e) => setInviteForm({ ...inviteForm, level: Number(e.target.value) as UserLevel })}
           />
           <div className="flex justify-end space-x-2">
             <Button variant="secondary" onClick={() => setIsInviteModalOpen(false)}>
@@ -443,7 +447,7 @@ export function Employees() {
                 { value: '1', label: 'Super Admin (Level 1)' },
               ]}
               value={String(editForm.level || 3)}
-              onChange={(e) => setEditForm({ ...editForm, level: Number(e.target.value) })}
+              onChange={(e) => setEditForm({ ...editForm, level: Number(e.target.value) as UserLevel })}
             />
           )}
           <div className="flex justify-end space-x-2">
