@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>내 근무 증명 - 관리자 모드</title>
+    <script>
+      // GitHub Pages SPA 라우팅 지원
+      // 404 페이지에서 index.html로 리다이렉트
+      var path = window.location.pathname;
+      var segments = path.split('/').filter(Boolean);
+      
+      // /HRM 경로 제거
+      if (segments[0] === 'HRM') {
+        segments.shift();
+      }
+      
+      // index.html로 리다이렉트 (쿼리와 해시 유지)
+      var newPath = '/HRM/' + (segments.length > 0 ? segments.join('/') : '');
+      if (window.location.search) {
+        newPath += window.location.search;
+      }
+      if (window.location.hash) {
+        newPath += window.location.hash;
+      }
+      window.location.replace(newPath);
+    </script>
+  </head>
+  <body>
+    <div>리다이렉트 중...</div>
+  </body>
+</html>
+

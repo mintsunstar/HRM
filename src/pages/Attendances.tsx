@@ -480,3 +480,4 @@ function CapsUploadForm({ onUpload, onClose }: CapsUploadFormProps) {
   );
 }
 
+

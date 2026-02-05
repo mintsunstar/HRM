@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Layout } from '@/components/layout/Layout';
 import { ToastContainer } from '@/components/common/Toast';
+import { useAuthStore } from '@/store/authStore';
 import { Login } from '@/pages/Login';
 import { NotFoundPage, ForbiddenPage } from '@/pages/ErrorPages';
 import { Dashboard } from '@/pages/Dashboard';
@@ -12,9 +13,19 @@ import { ActivityLogs } from '@/pages/ActivityLogs';
 import { Settings } from '@/pages/Settings';
 import { MyAccount } from '@/pages/MyAccount';
 
+function RootRedirect() {
+  const { isAuthenticated } = useAuthStore();
+  
+  if (isAuthenticated) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  
+  return <Navigate to="/login" replace />;
+}
+
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/HRM">
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/403" element={<ForbiddenPage />} />
@@ -108,7 +119,7 @@ function App() {
           }
         />
         
-        <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/" element={<RootRedirect />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <ToastContainer />

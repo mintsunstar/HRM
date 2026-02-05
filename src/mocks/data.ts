@@ -237,3 +237,4 @@ export const mockPasswords: Record<string, string> = {
   'admin@bdgen.co.kr': 'pass1234',
 };
 
+
