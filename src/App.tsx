@@ -25,7 +25,7 @@ function RootRedirect() {
 
 function App() {
   return (
-    <BrowserRouter basename="/HRM">
+    <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/403" element={<ForbiddenPage />} />

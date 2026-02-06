@@ -10,13 +10,8 @@
       var path = window.location.pathname;
       var segments = path.split('/').filter(Boolean);
       
-      // /HRM 경로 제거
-      if (segments[0] === 'HRM') {
-        segments.shift();
-      }
-      
       // index.html로 리다이렉트 (쿼리와 해시 유지)
-      var newPath = '/HRM/' + (segments.length > 0 ? segments.join('/') : '');
+      var newPath = '/' + (segments.length > 0 ? segments.join('/') : '');
       if (window.location.search) {
         newPath += window.location.search;
       }
