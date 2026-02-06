@@ -29,6 +29,7 @@ export function Attendances() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCapsModalOpen, setIsCapsModalOpen] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState<Attendance | null>(null);
   const [editForm, setEditForm] = useState({
@@ -217,7 +218,7 @@ export function Attendances() {
       </div>
 
       {/* 필터 */}
-      <div className="bg-dark-surface rounded-lg p-4 border border-dark-border">
+      <div className="bg-dark-surface-850 rounded-bdg-10 p-4 border border-[#444444] shadow-bdg">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Input
             type="date"
@@ -256,7 +257,7 @@ export function Attendances() {
       </div>
 
       {/* 테이블 */}
-      <div className="bg-dark-surface rounded-lg border border-dark-border overflow-hidden">
+      <div className="bg-dark-surface-850 rounded-bdg-10 border border-[#444444] shadow-bdg overflow-hidden">
         <Table
           headers={['날짜', '사번', '이름', '출근시간', '퇴근시간', '상태', '근무시간', '작업']}
         >
@@ -292,16 +293,25 @@ export function Attendances() {
                 </TableCell>
                 <TableCell>{attendance.workHours ? `${attendance.workHours}시간` : '-'}</TableCell>
                 <TableCell>
-                  {canEditThis ? (
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleEdit(attendance)}
-                      className="text-mint-400 hover:text-mint-300 text-sm"
+                      onClick={() => {
+                        setSelectedAttendance(attendance);
+                        setIsDetailModalOpen(true);
+                      }}
+                      className="text-brand-400 hover:text-brand-500 text-sm"
                     >
-                      수정
+                      보기
                     </button>
-                  ) : (
-                    <span className="text-dark-text-secondary text-sm">수정 불가</span>
-                  )}
+                    {canEditThis && (
+                      <button
+                        onClick={() => handleEdit(attendance)}
+                        className="text-brand-400 hover:text-brand-500 text-sm"
+                      >
+                        수정
+                      </button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             );
@@ -374,7 +384,7 @@ export function Attendances() {
               수정 사유 <span className="text-red-500">*</span> (10~200자)
             </label>
             <textarea
-              className="w-full px-4 py-2 rounded-lg bg-dark-card border border-dark-border text-dark-text placeholder-dark-text-secondary focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent"
+              className="w-full px-4 py-2 rounded-bdg-10 bg-[rgba(2,6,23,.25)] border border-[#444444] text-dark-text-100 placeholder-dark-text-400 focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)]"
               rows={4}
               value={editForm.modificationReason}
               onChange={(e) => setEditForm({ ...editForm, modificationReason: e.target.value })}
@@ -391,6 +401,123 @@ export function Attendances() {
             <Button onClick={handleUpdate}>저장</Button>
           </div>
         </div>
+      </Modal>
+
+      {/* 상세보기 모달 */}
+      <Modal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        title="내 근태현황 상세보기"
+        size="lg"
+      >
+        {selectedAttendance && (
+          <div className="space-y-6">
+            {/* 근무 정보 섹션 */}
+            <div className="bg-dark-surface-800 rounded-bdg-10 p-4 border border-[#444444]">
+              <h3 className="text-base font-bold text-dark-text-100 mb-4">근무 정보</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-dark-text-400">근무날짜</span>
+                  <p className="text-base font-semibold text-dark-text-100 mt-1">{selectedAttendance.date}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-dark-text-400">출근시간</span>
+                  <p className="text-base font-semibold text-dark-text-100 mt-1">{selectedAttendance.checkIn || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-dark-text-400">퇴근시간</span>
+                  <p className="text-base font-semibold text-dark-text-100 mt-1">{selectedAttendance.checkOut || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-dark-text-400">총 근로시간</span>
+                  <p className="text-base font-semibold text-dark-text-100 mt-1">
+                    {selectedAttendance.workHours ? `${selectedAttendance.workHours}시간` : '-'}
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-sm text-dark-text-400">근무 상태</span>
+                  <p className="text-base font-semibold text-dark-text-100 mt-1">
+                    {selectedAttendance.status === 'normal'
+                      ? '정상'
+                      : selectedAttendance.status === 'late'
+                      ? '지각'
+                      : selectedAttendance.status === 'absent'
+                      ? '결근'
+                      : selectedAttendance.status === 'leave'
+                      ? '휴가'
+                      : '반차'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 블록체인 기록 섹션 */}
+            <div className="bg-dark-surface-800 rounded-bdg-10 p-4 border border-[#444444]">
+              <h3 className="text-base font-bold text-dark-text-100 mb-4">블록체인 기록</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-dark-text-400">record_id</span>
+                  <p className="text-dark-text-100 mt-1 font-mono">{selectedAttendance.recordId || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-dark-text-400">userid</span>
+                  <p className="text-dark-text-100 mt-1 font-mono">{selectedAttendance.userId || selectedAttendance.employeeId || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-dark-text-400">name</span>
+                  <p className="text-dark-text-100 mt-1">{selectedAttendance.userName || getEmployeeName(selectedAttendance.employeeId) || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-dark-text-400">date</span>
+                  <p className="text-dark-text-100 mt-1">{selectedAttendance.date}</p>
+                </div>
+                <div>
+                  <span className="text-dark-text-400">mod_start</span>
+                  <p className="text-dark-text-100 mt-1">{selectedAttendance.modStart || selectedAttendance.checkIn || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-dark-text-400">mod_end</span>
+                  <p className="text-dark-text-100 mt-1">{selectedAttendance.modEnd || selectedAttendance.checkOut || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-dark-text-400">sender</span>
+                  <p className="text-dark-text-100 mt-1 font-mono break-all">{selectedAttendance.sender || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-dark-text-400">mod_start_tx_hash</span>
+                  <p className="text-dark-text-100 mt-1 font-mono break-all text-xs">{selectedAttendance.modStartTxHash || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-dark-text-400">mod_start_block_hash</span>
+                  <p className="text-dark-text-100 mt-1 font-mono break-all text-xs">{selectedAttendance.modStartBlockHash || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-dark-text-400">mod_start_block_number</span>
+                  <p className="text-dark-text-100 mt-1 font-mono">{selectedAttendance.modStartBlockNumber || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-dark-text-400">mod_end_tx_hash</span>
+                  <p className="text-dark-text-100 mt-1 font-mono break-all text-xs">{selectedAttendance.modEndTxHash || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-dark-text-400">mod_end_block_hash</span>
+                  <p className="text-dark-text-100 mt-1 font-mono break-all text-xs">{selectedAttendance.modEndBlockHash || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-dark-text-400">mod_end_block_number</span>
+                  <p className="text-dark-text-100 mt-1 font-mono">{selectedAttendance.modEndBlockNumber || '-'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 닫기 버튼 */}
+            <div className="flex justify-end">
+              <Button onClick={() => setIsDetailModalOpen(false)} className="w-full sm:w-auto">
+                닫기
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* CAPS 업로드 모달 */}
@@ -447,7 +574,7 @@ function CapsUploadForm({ onUpload, onClose }: CapsUploadFormProps) {
           type="file"
           accept=".csv,.xlsx,.xls"
           onChange={handleFileChange}
-          className="w-full px-4 py-2 rounded-lg bg-dark-card border border-dark-border text-dark-text"
+          className="w-full px-4 py-2 rounded-bdg-10 bg-[rgba(2,6,23,.25)] border border-[#444444] text-dark-text-100"
         />
         {file && <p className="mt-2 text-sm text-dark-text-secondary">{file.name}</p>}
       </div>

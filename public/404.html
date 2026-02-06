@@ -8,17 +8,25 @@
       // GitHub Pages SPA 라우팅 지원
       // 404 페이지에서 index.html로 리다이렉트
       var path = window.location.pathname;
-      var segments = path.split('/').filter(Boolean);
       
-      // index.html로 리다이렉트 (쿼리와 해시 유지)
-      var newPath = '/' + (segments.length > 0 ? segments.join('/') : '');
+      // /HRM/로 시작하지 않으면 /HRM/로 리다이렉트
+      if (!path.startsWith('/HRM/')) {
+        window.location.replace('/HRM/');
+        return;
+      }
+      
+      // /HRM/로 시작하는 경우 index.html로 리다이렉트
+      // 쿼리와 해시는 유지
+      var newPath = '/HRM/';
       if (window.location.search) {
         newPath += window.location.search;
       }
       if (window.location.hash) {
         newPath += window.location.hash;
       }
-      window.location.replace(newPath);
+      
+      // index.html로 리다이렉트 (실제로는 /HRM/로 이동하면 index.html이 로드됨)
+      window.location.replace(newPath || '/HRM/');
     </script>
   </head>
   <body>

@@ -8,20 +8,20 @@ interface TableProps {
 export function Table({ headers, children }: TableProps) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
+      <table className="w-full border-collapse border-separate border-spacing-0">
         <thead>
-          <tr className="border-b border-dark-border">
+          <tr>
             {headers.map((header, index) => (
               <th
                 key={index}
-                className="px-4 py-3 text-left text-sm font-semibold text-dark-text-secondary uppercase tracking-wider"
+                className="text-left text-xs text-[rgba(224,242,254,.75)] px-2.5 py-2.5 border-b border-[#444444]"
               >
                 {header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-dark-border">{children}</tbody>
+        <tbody>{children}</tbody>
       </table>
     </div>
   );
@@ -36,7 +36,7 @@ interface TableRowProps {
 export function TableRow({ children, onClick, className }: TableRowProps) {
   return (
     <tr
-      className={`hover:bg-dark-card transition-colors ${onClick ? 'cursor-pointer' : ''} ${className || ''}`}
+      className={`hover:bg-[rgba(2,132,199,.06)] transition-colors ${onClick ? 'cursor-pointer' : ''} ${className || ''}`}
       onClick={onClick}
     >
       {children}
@@ -51,7 +51,7 @@ interface TableCellProps {
 
 export function TableCell({ children, className }: TableCellProps) {
   return (
-    <td className={`px-4 py-3 text-sm text-dark-text ${className || ''}`}>
+    <td className={`px-2.5 py-3 border-b border-[#444444] text-sm text-[rgba(224,242,254,.95)] ${className || ''}`}>
       {children}
     </td>
   );

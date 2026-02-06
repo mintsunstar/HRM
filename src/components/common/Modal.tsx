@@ -43,16 +43,16 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className={`bg-dark-surface rounded-lg shadow-xl ${sizeClasses[size]} w-full mx-4 max-h-[90vh] overflow-y-auto`}
+        className={`bg-[#0E1629] border border-[#444444] rounded-bdg-10 shadow-bdg ${sizeClasses[size]} w-full mx-4 max-h-[90vh] overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-4 border-b border-dark-border">
-            {title && <h2 className="text-xl font-semibold text-dark-text">{title}</h2>}
+          <div className="flex items-center justify-between p-4 border-b border-[#444444]">
+            {title && <h2 className="text-lg font-extrabold text-dark-text-100">{title}</h2>}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-dark-text-secondary hover:text-dark-text transition-colors"
+                className="text-dark-text-400 hover:text-dark-text-100 transition-colors"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18"></line>

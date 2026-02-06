@@ -63,7 +63,7 @@ export function Settings() {
       </div>
 
       {/* 근무 정책 */}
-      <div className="bg-dark-surface rounded-lg p-6 border border-dark-border">
+      <div className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg">
         <h2 className="text-xl font-semibold text-dark-text mb-4">근무 정책</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
@@ -125,7 +125,7 @@ export function Settings() {
       </div>
 
       {/* 블록체인 설정 */}
-      <div className="bg-dark-surface rounded-lg p-6 border border-dark-border">
+      <div className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg">
         <h2 className="text-xl font-semibold text-dark-text mb-4">블록체인 연동</h2>
         <div className="space-y-4">
           <label className="flex items-center space-x-2">
@@ -156,7 +156,7 @@ export function Settings() {
       </div>
 
       {/* CAPS 설정 */}
-      <div className="bg-dark-surface rounded-lg p-6 border border-dark-border">
+      <div className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg">
         <h2 className="text-xl font-semibold text-dark-text mb-4">CAPS 연동</h2>
         <div className="space-y-4">
           <label className="flex items-center space-x-2">
@@ -188,7 +188,7 @@ export function Settings() {
       </div>
 
       {/* 알림 설정 */}
-      <div className="bg-dark-surface rounded-lg p-6 border border-dark-border">
+      <div className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg">
         <h2 className="text-xl font-semibold text-dark-text mb-4">알림 설정</h2>
         <div className="space-y-4">
           <div>

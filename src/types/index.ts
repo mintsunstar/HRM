@@ -30,6 +30,19 @@ export interface Attendance {
   modificationReason?: string;
   createdAt: string;
   updatedAt: string;
+  // 블록체인 기록
+  recordId?: string;
+  userId?: string;
+  userName?: string;
+  modStart?: string;
+  modEnd?: string;
+  sender?: string;
+  modStartTxHash?: string;
+  modStartBlockHash?: string;
+  modStartBlockNumber?: number;
+  modEndTxHash?: string;
+  modEndBlockHash?: string;
+  modEndBlockNumber?: number;
 }
 
 export interface ActivityLog {

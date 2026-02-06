@@ -49,11 +49,17 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-dark-bg">
+    <div className="min-h-screen flex items-center justify-center bg-dark-bg-900">
       <div className="w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-mint-400 mb-2">내 근무 증명</h1>
-          <p className="text-dark-text-secondary">관리자 모드</p>
+          <div className="flex items-center justify-center gap-2.5 mb-4">
+            <div className="w-[34px] h-[34px] rounded-[10px] bg-gradient-to-br from-white/20 to-transparent bg-[linear-gradient(135deg,#24ACFF,#0065FA)] flex items-center justify-center shadow-[0_0_18px_rgba(37,99,235,0.9)]">
+              <div className="w-4 h-4 rounded-[6px] border-2 border-[rgba(15,23,42,0.9)] opacity-90"></div>
+            </div>
+            <h1 className="text-3xl font-bold text-brand-400">BDGen</h1>
+          </div>
+          <h2 className="text-2xl font-bold text-dark-text-100 mb-2">내 근무 증명</h2>
+          <p className="text-dark-text-400">관리자 모드</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -83,9 +89,9 @@ export function Login() {
           </Button>
         </form>
 
-        <div className="mt-8 p-4 bg-dark-card rounded-lg border border-dark-border">
-          <p className="text-sm text-dark-text-secondary mb-2">테스트 계정:</p>
-          <div className="text-xs text-dark-text-secondary space-y-1">
+        <div className="mt-8 p-4 bg-dark-surface-850 rounded-bdg-10 border border-[#444444] shadow-bdg">
+          <p className="text-sm text-dark-text-400 mb-2">테스트 계정:</p>
+          <div className="text-xs text-dark-text-400 space-y-1">
             <p>Super Admin: superadmin@bdgen.co.kr / pass1234</p>
             <p>Admin: admin@bdgen.co.kr / pass1234</p>
           </div>

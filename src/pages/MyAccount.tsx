@@ -38,7 +38,7 @@ export function MyAccount() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-dark-text">내 정보</h1>
 
-      <div className="bg-dark-surface rounded-lg p-6 border border-dark-border max-w-2xl">
+      <div className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg max-w-2xl">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-dark-text-secondary mb-1">
@@ -48,7 +48,7 @@ export function MyAccount() {
               type="text"
               value={currentUser.employeeId}
               disabled
-              className="w-full px-4 py-2 rounded-lg bg-dark-card border border-dark-border text-dark-text-secondary"
+              className="w-full px-4 py-2 rounded-bdg-10 bg-[rgba(2,6,23,.25)] border border-[#444444] text-dark-text-400"
             />
           </div>
           <Input
@@ -75,7 +75,7 @@ export function MyAccount() {
               type="text"
               value={currentUser.department}
               disabled
-              className="w-full px-4 py-2 rounded-lg bg-dark-card border border-dark-border text-dark-text-secondary"
+              className="w-full px-4 py-2 rounded-bdg-10 bg-[rgba(2,6,23,.25)] border border-[#444444] text-dark-text-400"
             />
             <p className="mt-1 text-xs text-dark-text-secondary">
               부서 정보는 관리자만 수정할 수 있습니다.

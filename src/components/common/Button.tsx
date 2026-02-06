@@ -17,19 +17,19 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-bg';
+  const baseStyles = 'font-bold rounded-bdg-10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-bg-900';
   
   const variantStyles = {
-    primary: 'bg-mint-500 hover:bg-mint-600 text-white focus:ring-mint-500',
-    secondary: 'bg-dark-card hover:bg-dark-border text-dark-text focus:ring-dark-border',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
-    ghost: 'bg-transparent hover:bg-dark-card text-dark-text focus:ring-dark-border',
+    primary: 'bg-gradient-to-br from-brand-400 to-brand-500 hover:opacity-90 text-white focus:ring-brand-400 shadow-[0_0_18px_rgba(37,99,235,0.5)] border border-[#444444]',
+    secondary: 'bg-dark-surface-850 hover:bg-dark-surface-800 text-dark-text-100 focus:ring-dark-line-700 border border-[#444444]',
+    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 border border-[#444444]',
+    ghost: 'bg-[rgba(148,163,184,.12)] hover:bg-[rgba(148,163,184,.18)] text-dark-text-100 focus:ring-dark-line-700 border border-[#444444]',
   };
   
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
+    sm: 'px-3.5 py-2 text-sm',
+    md: 'px-3.5 py-2.5 text-base',
+    lg: 'px-4 py-3 text-lg',
   };
 
   return (

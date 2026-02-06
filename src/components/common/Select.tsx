@@ -19,10 +19,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <select
           ref={ref}
           className={clsx(
-            'w-full px-4 py-2 rounded-lg bg-dark-card border border-dark-border',
-            'text-dark-text',
-            'focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent',
-            error && 'border-red-500 focus:ring-red-500',
+            'w-full px-3 py-2.5 rounded-bdg-10 border border-[#444444]',
+            'bg-[rgba(2,6,23,.25)] text-dark-text-100',
+            'focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)]',
+            error && 'border-red-500 focus:border-red-500 focus:shadow-[0_0_0_3px_rgba(239,68,68,.12)]',
             className
           )}
           {...props}

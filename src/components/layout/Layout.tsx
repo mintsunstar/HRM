@@ -10,11 +10,11 @@ export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-dark-bg">
+    <div className="min-h-screen bg-dark-bg-900">
       <Header />
       <div className="flex">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <main className="flex-1 p-6 lg:ml-0">
+        <main className="flex-1 p-[26px_22px] lg:ml-0 bg-[radial-gradient(circle_at_0%_100%,rgba(37,99,235,0.18),transparent_60%),radial-gradient(circle_at_100%_0%,rgba(34,211,238,0.16),transparent_55%),linear-gradient(135deg,#020617,#020617)]">
           {/* 모바일 메뉴 버튼 */}
           <button
             onClick={() => setSidebarOpen(true)}

@@ -87,7 +87,7 @@ export function Reports() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {reports.map((report) => (
-          <div key={report.id} className="bg-dark-surface rounded-lg p-6 border border-dark-border">
+          <div key={report.id} className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg">
             <h3 className="text-lg font-semibold text-dark-text mb-2">{report.name}</h3>
             <p className="text-sm text-dark-text-secondary mb-4">
               {report.period.start} ~ {report.period.end}

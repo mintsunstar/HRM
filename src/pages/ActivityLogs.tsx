@@ -74,7 +74,7 @@ export function ActivityLogs() {
         <h1 className="text-3xl font-bold text-dark-text">활동 로그</h1>
       </div>
 
-      <div className="bg-dark-surface rounded-lg p-4 border border-dark-border">
+      <div className="bg-dark-surface-850 rounded-bdg-10 p-4 border border-[#444444] shadow-bdg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
             options={[
@@ -91,7 +91,7 @@ export function ActivityLogs() {
         </div>
       </div>
 
-      <div className="bg-dark-surface rounded-lg border border-dark-border overflow-hidden">
+      <div className="bg-dark-surface-850 rounded-bdg-10 border border-[#444444] shadow-bdg overflow-hidden">
         <Table headers={['시간', '사용자', '액션', '대상 유형', '상세', 'IP 주소']}>
           {paginatedLogs.map((log) => (
             <TableRow key={log.id}>
