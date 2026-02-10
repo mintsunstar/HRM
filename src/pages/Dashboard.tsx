@@ -53,7 +53,12 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-dark-text">대시보드</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-dark-text">대시보드</h1>
+          <p className="text-sm text-dark-text-400 mt-2">
+            조직 전체의 오늘 근태 상태를 요약해서 보여줍니다.
+          </p>
+        </div>
         <button
           onClick={fetchStats}
           className="px-3.5 py-2.5 bg-[rgba(148,163,184,.12)] hover:bg-[rgba(148,163,184,.18)] rounded-bdg-10 text-dark-text-100 transition-colors font-bold"

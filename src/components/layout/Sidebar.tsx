@@ -215,19 +215,15 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           </div>
 
           {/* 푸터 */}
-          <div className="mt-auto text-[11px] text-dark-text-400 border-t border-[#444444] pt-2.5">
-            <div className="mb-2">
-              <p>권한 레벨: {user?.level === 1 ? 'Super Admin' : user?.level === 2 ? 'Admin' : 'User'}</p>
+          <div className="mt-auto text-[11px] text-dark-text-400 border-t border-[#444444] pt-4">
+            <div className="mb-3">
+              <p className="text-[11px] text-dark-text-400">권한 레벨: {user?.level === 1 ? 'Super Admin' : user?.level === 2 ? 'Admin' : 'User'}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full px-4 py-2 bg-[rgba(15,23,42,0.9)] hover:bg-[rgba(31,41,55,0.9)] text-dark-text-400 hover:text-[#E5E7EB] border border-[#444444] rounded-bdg-10 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              className="w-full text-left px-3 py-2 text-[13px] text-dark-text-400 hover:text-[#E5E7EB] hover:bg-[rgba(15,23,42,0.9)] rounded-[10px] transition-colors flex items-center gap-2"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
+              <span>→</span>
               <span>로그아웃</span>
             </button>
           </div>
