@@ -25,8 +25,8 @@ const menuItems: MenuItem[] = [
   {
     label: '직원 관리',
     children: [
-      { path: '/admin/employees', label: '직원관리' },
-      { path: '/admin/employees/add', label: '직원추가' },
+      { path: '/admin/employees', label: '직원목록' },
+      { path: '/admin/employees/add', label: '직원등록' },
     ],
   },
   {

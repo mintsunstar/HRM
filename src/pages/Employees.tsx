@@ -13,8 +13,8 @@ import { Modal } from '@/components/common/Modal';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
-
-const ITEMS_PER_PAGE = 10;
+import { Plus, Download } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 export function Employees() {
   const location = useLocation();
@@ -28,12 +28,14 @@ export function Employees() {
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<User | null>(null);
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
   const [editForm, setEditForm] = useState<Partial<User & { birthDate?: string; jobTitle?: string }>>({});
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -113,9 +115,9 @@ export function Employees() {
   const departments = Array.from(new Set(employees.map((e) => e.department)));
 
   // 페이지네이션
-  const totalPages = Math.ceil(filteredEmployees.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + itemsPerPage);
 
   const handleInvite = async () => {
     try {
@@ -160,10 +162,13 @@ export function Employees() {
     setEditForm({
       name: employee.name,
       email: employee.email,
+      employeeId: employee.employeeId,
       department: employee.department,
       position: employee.position,
       phone: employee.phone,
       level: employee.level,
+      isActive: employee.isActive,
+      joinDate: employee.joinDate,
     });
     setPasswordForm({
       currentPassword: '',
@@ -190,6 +195,17 @@ export function Employees() {
       // 업데이트된 정보로 selectedEmployee 갱신
       const updated = await usersApi.getUserById(selectedEmployee.id);
       setSelectedEmployee(updated);
+      // editForm도 업데이트된 정보로 갱신
+      setEditForm({
+        name: updated.name,
+        email: updated.email,
+        department: updated.department,
+        position: updated.position,
+        phone: updated.phone,
+        level: updated.level,
+        isActive: updated.isActive,
+        joinDate: updated.joinDate,
+      });
     } catch (error) {
       addToast('직원 정보 수정에 실패했습니다.', 'error');
     }
@@ -241,15 +257,23 @@ export function Employees() {
     }
   };
 
+  const handleResendInvite = async (employee: User) => {
+    try {
+      // TODO: API 연동 시 실제 초대 재발송 로직 구현
+      addToast(`${employee.name}님에게 초대 메일을 재발송했습니다.`, 'success');
+    } catch (error) {
+      addToast('초대 재발송에 실패했습니다.', 'error');
+    }
+  };
+
   const handleExcelDownload = () => {
     const data = filteredEmployees.map((emp) => ({
       사번: emp.employeeId,
       이름: emp.name,
       이메일: emp.email,
+      재직상태: emp.isActive ? '재직' : '퇴사',
       부서: emp.department,
       직책: emp.position,
-      상태: emp.isActive ? '활성' : '비활성',
-      입사일: emp.joinDate,
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
@@ -272,7 +296,7 @@ export function Employees() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-dark-text-100">사용자 초대</h1>
+          <h1 className="text-3xl font-bold text-dark-text-100">직원관리 / 직원등록</h1>
           <Button variant="secondary" onClick={() => navigate('/admin/employees')}>
             목록으로
           </Button>
@@ -355,56 +379,149 @@ export function Employees() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-dark-text-100">직원 관리</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-dark-text-100">직원관리 / 직원목록</h1>
+          <p className="text-sm text-dark-text-400 mt-2">등록된 직원정보 목록, 신규등록 및 초대 · 정보 수정</p>
+        </div>
         <div className="flex space-x-2">
-          <Button onClick={handleExcelDownload}>Excel 다운로드</Button>
-          <Button onClick={() => navigate('/admin/employees/add')}>직원 초대</Button>
+          <Button variant="secondary" onClick={handleExcelDownload} className="w-[168px] flex items-center justify-center">
+            <Download className="w-4 h-4 mr-2" />
+            Excel 다운로드
+          </Button>
+          <Button onClick={() => navigate('/admin/employees/add')} className="w-[168px] flex items-center justify-center">
+            <Plus className="w-4 h-4 mr-2" />
+            신규 직원 등록
+          </Button>
         </div>
       </div>
 
       {/* 필터 및 검색 */}
       <div className="bg-dark-surface-850 rounded-bdg-10 p-4 border border-[#444444] shadow-bdg">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Input
-            placeholder="이름, 이메일, 사번으로 검색"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Select
-            options={[
-              { value: 'all', label: '전체 부서' },
-              ...departments.map((dept) => ({ value: dept, label: dept })),
-            ]}
-            value={departmentFilter}
-            onChange={(e) => setDepartmentFilter(e.target.value)}
-          />
-          <Select
-            options={[
-              { value: 'all', label: '전체 상태' },
-              { value: 'active', label: '활성' },
-              { value: 'inactive', label: '비활성' },
-            ]}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          />
-          <div className="text-dark-text-secondary flex items-center">
-            총 {filteredEmployees.length}명
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div className="md:col-span-1">
+            <Input
+              label="검색(이름/이메일/사번)"
+              placeholder="예: 0008 / user@"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
+          <div className="md:col-span-1">
+            <Select
+              label="부서"
+              options={[
+                { value: 'all', label: '전체' },
+                ...departments.map((dept) => ({ value: dept, label: dept })),
+              ]}
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-1">
+            <Select
+              label="계정상태"
+              options={[
+                { value: 'all', label: '전체' },
+                { value: 'active', label: '활성' },
+                { value: 'inactive', label: '비활성' },
+              ]}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-1 flex items-end gap-2">
+            <Button 
+              onClick={filterEmployees}
+              variant="ghost"
+              className="!bg-[#0F172A] !border-[#263244] !text-white hover:!bg-[#1E293B] hover:!border-[#334155]"
+            >
+              조회
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setSearchTerm('');
+                setDepartmentFilter('all');
+                setStatusFilter('all');
+              }}
+            >
+              필터 초기화
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* 페이지네이션 컨트롤 */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-dark-text-400">
+          총 <span className="text-dark-text-100 font-bold">{filteredEmployees.length}</span>명
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            options={[
+              { value: '10', label: '10개' },
+              { value: '20', label: '20개' },
+              { value: '50', label: '50개' },
+            ]}
+            value={itemsPerPage.toString()}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="w-[100px]"
+          />
         </div>
       </div>
 
       {/* 테이블 */}
       <div className="bg-dark-surface-850 rounded-bdg-10 border border-[#444444] shadow-bdg overflow-hidden">
         <Table
-          headers={['사번', '이름', '이메일', '부서', '직책', '상태', '입사일', '작업']}
+          headers={[
+            <input
+              key="select-all"
+              type="checkbox"
+              checked={paginatedEmployees.length > 0 && paginatedEmployees.every((emp) => selectedEmployeeIds.has(emp.id))}
+              onChange={(e) => {
+                const newSet = new Set(selectedEmployeeIds);
+                if (e.target.checked) {
+                  paginatedEmployees.forEach((emp) => newSet.add(emp.id));
+                } else {
+                  paginatedEmployees.forEach((emp) => newSet.delete(emp.id));
+                }
+                setSelectedEmployeeIds(newSet);
+              }}
+              className="w-4 h-4 rounded border-[#444444] bg-[rgba(2,6,23,.25)] text-brand-500 focus:ring-brand-500 focus:ring-2 cursor-pointer"
+            />,
+            '사번',
+            '이름',
+            '이메일',
+            '재직상태',
+            '부서',
+            '직책',
+            '작업',
+          ]}
         >
           {paginatedEmployees.map((employee) => (
             <TableRow key={employee.id}>
+              <TableCell>
+                <input
+                  type="checkbox"
+                  checked={selectedEmployeeIds.has(employee.id)}
+                  onChange={(e) => {
+                    const newSet = new Set(selectedEmployeeIds);
+                    if (e.target.checked) {
+                      newSet.add(employee.id);
+                    } else {
+                      newSet.delete(employee.id);
+                    }
+                    setSelectedEmployeeIds(newSet);
+                  }}
+                  className="w-4 h-4 rounded border-[#444444] bg-[rgba(2,6,23,.25)] text-brand-500 focus:ring-brand-500 focus:ring-2 cursor-pointer"
+                />
+              </TableCell>
               <TableCell>{employee.employeeId}</TableCell>
               <TableCell>{employee.name}</TableCell>
               <TableCell>{employee.email}</TableCell>
-              <TableCell>{employee.department}</TableCell>
-              <TableCell>{employee.position}</TableCell>
               <TableCell>
                 <span
                   className={`px-2 py-1 rounded text-xs ${
@@ -413,17 +530,26 @@ export function Employees() {
                       : 'bg-gray-600 text-white'
                   }`}
                 >
-                  {employee.isActive ? '활성' : '비활성'}
+                  {employee.isActive ? '재직' : '퇴사'}
                 </span>
               </TableCell>
-              <TableCell>{employee.joinDate}</TableCell>
+              <TableCell>{employee.department}</TableCell>
+              <TableCell>{employee.position}</TableCell>
               <TableCell>
-                <button
-                  onClick={() => handleViewDetail(employee)}
-                  className="text-mint-400 hover:text-mint-300 text-sm"
-                >
-                  상세보기
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleViewDetail(employee)}
+                    className="px-3 py-1.5 rounded-bdg-10 bg-[#0F172A] border border-[#263244] text-white hover:bg-[#1E293B] hover:border-[#334155] text-sm transition-colors"
+                  >
+                    상세
+                  </button>
+                  <button
+                    onClick={() => handleResendInvite(employee)}
+                    className="px-3 py-1.5 rounded-bdg-10 border border-[#444444] text-dark-text-400 hover:text-mint-400 hover:border-mint-400 text-sm transition-colors"
+                  >
+                    초대 재발송
+                  </button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -538,60 +664,129 @@ export function Employees() {
       >
         {selectedEmployee && (
           <div className="space-y-6">
-            {/* 인사 정보 (관리자 설정) - 사용자 커스텀 불가 */}
+            {/* 인사 정보 (관리자 설정) - 관리자만 수정 가능 */}
             <div className="border-b border-dark-line-700 pb-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-dark-text">인사 정보 (관리자 설정)</h3>
                 <span className="text-xs text-dark-text-secondary bg-dark-card px-2 py-1 rounded">
-                  사용자 커스텀 불가
+                  관리자만 수정 가능
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">사번</label>
-                  <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                    {selectedEmployee.employeeId}
-                  </div>
+                  {isEditMode ? (
+                    <Input
+                      value={editForm.employeeId || selectedEmployee.employeeId}
+                      onChange={(e) => setEditForm({ ...editForm, employeeId: e.target.value })}
+                    />
+                  ) : (
+                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
+                      {selectedEmployee.employeeId}
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm text-dark-text-secondary mb-1">사원명</label>
-                  <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                    {selectedEmployee.name}
-                  </div>
+                  <label className="block text-sm text-dark-text-secondary mb-1">이름</label>
+                  {isEditMode ? (
+                    <Input
+                      value={editForm.name || selectedEmployee.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    />
+                  ) : (
+                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
+                      {selectedEmployee.name}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">입사일</label>
-                  <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                    {selectedEmployee.joinDate}
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={isEditMode ? (editForm.joinDate || selectedEmployee.joinDate) : selectedEmployee.joinDate}
+                      onChange={(e) => {
+                        if (isEditMode) {
+                          setEditForm({ ...editForm, joinDate: e.target.value });
+                        }
+                      }}
+                      disabled={!isEditMode}
+                      className="w-full px-3 py-2.5 pr-10 rounded-bdg-10 border border-[#444444] bg-[rgba(2,6,23,.25)] text-dark-text-100 placeholder-dark-text-400 focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)] disabled:opacity-100 disabled:cursor-not-allowed"
+                    />
+                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-dark-text-400 pointer-events-none" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">시스템 권한</label>
-                  <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                    {selectedEmployee.level === 1
-                      ? 'Super Admin'
-                      : selectedEmployee.level === 2
-                      ? 'Admin'
-                      : 'User'}
-                  </div>
+                  <Select
+                    options={[
+                      { value: '1', label: 'Super Admin' },
+                      { value: '2', label: 'Admin' },
+                      { value: '3', label: 'User' },
+                    ]}
+                    value={String(isEditMode ? (editForm.level ?? selectedEmployee.level) : selectedEmployee.level)}
+                    onChange={(e) => {
+                      if (isEditMode) {
+                        setEditForm({ ...editForm, level: Number(e.target.value) as UserLevel });
+                      }
+                    }}
+                    disabled={!isEditMode}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">이메일</label>
-                  <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                    {selectedEmployee.email}
-                  </div>
+                  {isEditMode ? (
+                    <Input
+                      type="email"
+                      value={editForm.email || selectedEmployee.email}
+                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    />
+                  ) : (
+                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
+                      {selectedEmployee.email}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">근무상태</label>
-                  <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                    {selectedEmployee.isActive ? '재직중' : '퇴사'}
-                  </div>
+                  <Select
+                    options={[
+                      { value: 'active', label: '재직중' },
+                      { value: 'inactive', label: '퇴사' },
+                    ]}
+                    value={isEditMode 
+                      ? (editForm.isActive !== undefined ? (editForm.isActive ? 'active' : 'inactive') : (selectedEmployee.isActive ? 'active' : 'inactive'))
+                      : (selectedEmployee.isActive ? 'active' : 'inactive')
+                    }
+                    onChange={(e) => {
+                      if (isEditMode) {
+                        setEditForm({ ...editForm, isActive: e.target.value === 'active' });
+                      }
+                    }}
+                    disabled={!isEditMode}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">퇴사일</label>
                   <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
                     -
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-dark-text-secondary mb-1">계정상태</label>
+                  <Select
+                    options={[
+                      { value: 'true', label: 'Active' },
+                      { value: 'false', label: 'Inactive' },
+                    ]}
+                    value={String(isEditMode ? (editForm.isActive ?? selectedEmployee.isActive) : selectedEmployee.isActive)}
+                    onChange={(e) => {
+                      if (isEditMode) {
+                        setEditForm({ ...editForm, isActive: e.target.value === 'true' });
+                      }
+                    }}
+                    disabled={!isEditMode}
+                  />
                 </div>
               </div>
             </div>

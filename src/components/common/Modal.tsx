@@ -3,7 +3,7 @@ import { ReactNode, useEffect } from 'react';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
+  title?: string | ReactNode;
   children: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showCloseButton?: boolean;
@@ -44,7 +44,22 @@ export function Modal({
     >
       <div
         className={`bg-[#0E1629] border border-[#444444] rounded-bdg-10 shadow-bdg ${sizeClasses[size]} w-full mx-4 max-h-[90vh] overflow-y-auto`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          // select 요소나 option 요소, 또는 select 내부 요소가 아닌 경우에만 이벤트 전파 중지
+          const target = e.target as HTMLElement;
+          const isSelectElement = target.tagName === 'SELECT' || target.tagName === 'OPTION' || target.closest('select');
+          if (!isSelectElement) {
+            e.stopPropagation();
+          }
+        }}
+        onMouseDown={(e) => {
+          // select 요소나 option 요소, 또는 select 내부 요소가 아닌 경우에만 이벤트 전파 중지
+          const target = e.target as HTMLElement;
+          const isSelectElement = target.tagName === 'SELECT' || target.tagName === 'OPTION' || target.closest('select');
+          if (!isSelectElement) {
+            e.stopPropagation();
+          }
+        }}
       >
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between p-4 border-b border-[#444444]">

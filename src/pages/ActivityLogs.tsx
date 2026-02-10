@@ -9,8 +9,6 @@ import { Select } from '@/components/common/Select';
 import { Table, TableRow, TableCell } from '@/components/common/Table';
 import { format } from 'date-fns';
 
-const ITEMS_PER_PAGE = 20;
-
 export function ActivityLogs() {
   const { user: currentUser } = useAuthStore();
   const { addToast } = useToastStore();
@@ -19,6 +17,7 @@ export function ActivityLogs() {
   const [isLoading, setIsLoading] = useState(true);
   const [targetTypeFilter, setTargetTypeFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   useEffect(() => {
     fetchLogs();
@@ -56,9 +55,9 @@ export function ActivityLogs() {
     setCurrentPage(1);
   };
 
-  const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedLogs = filteredLogs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedLogs = filteredLogs.slice(startIndex, startIndex + itemsPerPage);
 
   if (isLoading) {
     return (
@@ -87,6 +86,28 @@ export function ActivityLogs() {
             ]}
             value={targetTypeFilter}
             onChange={(e) => setTargetTypeFilter(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* 페이지네이션 컨트롤 */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-dark-text-400">
+          총 <span className="text-dark-text-100 font-bold">{filteredLogs.length}</span>명
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            options={[
+              { value: '10', label: '10개' },
+              { value: '20', label: '20개' },
+              { value: '50', label: '50개' },
+            ]}
+            value={itemsPerPage.toString()}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="w-[100px]"
           />
         </div>
       </div>

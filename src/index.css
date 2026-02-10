@@ -49,4 +49,34 @@ body {
   background: rgba(71, 85, 105, 0.75);
 }
 
+/* Select 드롭다운 스타일 */
+select {
+  color-scheme: dark;
+}
+
+/* 드롭다운 옵션 스타일 - 어두운 배경에 흰색 텍스트 */
+select option {
+  background-color: rgba(15, 23, 42, 0.92) !important;
+  color: #F9FAFB !important;
+  padding: 8px 12px;
+}
+
+/* 선택된 옵션 스타일 - 파란색 배경 */
+select option:checked {
+  background-color: #0065FA !important;
+  color: #F9FAFB !important;
+}
+
+/* 호버 상태 (일부 브라우저에서만 작동) */
+select option:hover {
+  background-color: rgba(37, 99, 235, 0.8) !important;
+  color: #F9FAFB !important;
+}
+
+/* 포커스 상태 */
+select:focus option:checked {
+  background-color: #0065FA !important;
+  color: #F9FAFB !important;
+}
+
 

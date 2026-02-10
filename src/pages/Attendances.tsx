@@ -11,8 +11,7 @@ import { Table, TableRow, TableCell } from '@/components/common/Table';
 import { Modal } from '@/components/common/Modal';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import * as XLSX from 'xlsx';
-
-const ITEMS_PER_PAGE = 20;
+import { Calendar } from 'lucide-react';
 
 export function Attendances() {
   const { user: currentUser } = useAuthStore();
@@ -28,10 +27,12 @@ export function Attendances() {
     end: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCapsModalOpen, setIsCapsModalOpen] = useState(false);
   const [isDetailEditMode, setIsDetailEditMode] = useState(false);
+  const [showBlockchainDetails, setShowBlockchainDetails] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState<Attendance | null>(null);
   const [selectedAttendanceIds, setSelectedAttendanceIds] = useState<Set<string>>(new Set());
   const [editForm, setEditForm] = useState({
@@ -201,9 +202,9 @@ export function Attendances() {
   };
 
   // 페이지네이션
-  const totalPages = Math.ceil(filteredAttendances.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedAttendances = filteredAttendances.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredAttendances.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedAttendances = filteredAttendances.slice(startIndex, startIndex + itemsPerPage);
 
   if (isLoading) {
     return (
@@ -216,38 +217,63 @@ export function Attendances() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-dark-text">전사 근태 관리</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-dark-text">전사 근태 관리</h1>
+          <p className="text-sm text-dark-text-400 mt-2">
+            출근/미출근 인원 수, 지각 인원 수, 정상 출근율 표시
+          </p>
+        </div>
         <div className="flex space-x-2">
           {currentUser?.level === 1 && (
-            <Button onClick={() => setIsCapsModalOpen(true)}>CAPS 업로드</Button>
+            <Button 
+              onClick={() => setIsCapsModalOpen(true)}
+              variant="ghost"
+              className="!bg-[#0F172A] !border-[#263244] !text-white hover:!bg-[#1E293B] hover:!border-[#334155]"
+            >
+              캡스 데이터 업로드
+            </Button>
           )}
-          <Button onClick={handleExcelDownload}>Excel 다운로드</Button>
+          <Button 
+            onClick={handleExcelDownload}
+            variant="ghost"
+            className="!bg-[#1E293B] !border-[#334155] !text-white hover:!bg-[#0F172A] hover:!border-[#263244]"
+          >
+            엑셀 다운로드(CSV)
+          </Button>
         </div>
       </div>
 
       {/* 필터 */}
       <div className="bg-dark-surface-850 rounded-bdg-10 p-4 border border-[#444444] shadow-bdg">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Input
-            type="date"
-            label="시작일"
-            value={dateRange.start}
-            onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-          />
-          <Input
-            type="date"
-            label="종료일"
-            value={dateRange.end}
-            onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-          />
-          <Input
-            placeholder="이름, 사번으로 검색"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div>
+            <label className="block text-xs text-[rgba(224,242,254,.82)] mb-1.5">기간 시작</label>
+            <div className="relative">
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                className="w-full px-3 py-2.5 pr-10 rounded-bdg-10 border border-[#444444] bg-[rgba(2,6,23,.25)] text-dark-text-100 placeholder-dark-text-400 focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)]"
+              />
+              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-dark-text-400 pointer-events-none" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-[rgba(224,242,254,.82)] mb-1.5">기간 종료</label>
+            <div className="relative">
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                className="w-full px-3 py-2.5 pr-10 rounded-bdg-10 border border-[#444444] bg-[rgba(2,6,23,.25)] text-dark-text-100 placeholder-dark-text-400 focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)]"
+              />
+              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-dark-text-400 pointer-events-none" />
+            </div>
+          </div>
           <Select
+            label="상태"
             options={[
-              { value: 'all', label: '전체 상태' },
+              { value: 'all', label: '전체' },
               { value: 'normal', label: '정상' },
               { value: 'late', label: '지각' },
               { value: 'absent', label: '결근' },
@@ -256,11 +282,56 @@ export function Attendances() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           />
-          <div className="flex items-end">
-            <Button variant="secondary" onClick={fetchAttendances}>
+          <Input
+            label="검색(이름/사번/이메일)"
+            placeholder="예: 0008 / 김 / user@"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <div className="flex items-end gap-2">
+            <Button 
+              onClick={fetchAttendances}
+              variant="ghost"
+              className="!bg-[#0F172A] !border-[#263244] !text-white hover:!bg-[#1E293B] hover:!border-[#334155]"
+            >
               조회
             </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setDateRange({
+                  start: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+                  end: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
+                });
+                setSearchTerm('');
+                setStatusFilter('all');
+              }}
+            >
+              초기화
+            </Button>
           </div>
+        </div>
+      </div>
+
+      {/* 페이지네이션 컨트롤 */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-dark-text-400">
+          총 <span className="text-dark-text-100 font-bold">{filteredAttendances.length}</span>명
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            options={[
+              { value: '10', label: '10개' },
+              { value: '20', label: '20개' },
+              { value: '50', label: '50개' },
+            ]}
+            value={itemsPerPage.toString()}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="w-[100px]"
+          />
         </div>
       </div>
 
@@ -349,6 +420,7 @@ export function Attendances() {
                     onClick={() => {
                       setSelectedAttendance(attendance);
                       setIsDetailEditMode(false);
+                      setShowBlockchainDetails(false);
                       setDetailEditForm({
                         checkIn: attendance.checkIn || '',
                         checkOut: attendance.checkOut || '',
@@ -458,8 +530,20 @@ export function Attendances() {
         onClose={() => {
           setIsDetailModalOpen(false);
           setIsDetailEditMode(false);
+          setShowBlockchainDetails(false);
         }}
-        title="근태 상세"
+        title={
+          selectedAttendance ? (
+            <div className="flex items-center gap-2">
+              <span>근태 상세</span>
+              <span className="text-sm font-normal text-dark-text-400">
+                {getEmployeeName(selectedAttendance.employeeId)} ({selectedAttendance.employeeId})
+              </span>
+            </div>
+          ) : (
+            '근태 상세'
+          )
+        }
         size="lg"
       >
         {selectedAttendance && (
@@ -467,12 +551,6 @@ export function Attendances() {
             {/* 근무 정보 섹션 */}
             <div className="bg-dark-surface-800 rounded-bdg-10 p-4 border border-[#444444]">
               <h3 className="text-base font-bold text-dark-text-100 mb-4">근무 정보</h3>
-              <div className="mb-4 pb-4 border-b border-[#444444]">
-                <span className="text-sm text-dark-text-400">근무자명 / 사번</span>
-                <p className="text-base font-semibold text-dark-text-100 mt-1">
-                  {getEmployeeName(selectedAttendance.employeeId)} / {selectedAttendance.employeeId}
-                </p>
-              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-sm text-dark-text-400">근무날짜</span>
@@ -561,8 +639,17 @@ export function Attendances() {
 
             {/* 블록체인 기록 섹션 */}
             <div className="bg-dark-surface-800 rounded-bdg-10 p-4 border border-[#444444]">
-              <h3 className="text-base font-bold text-dark-text-100 mb-4">블록체인 기록</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-dark-text-100">블록체인 기록</h3>
+                <button
+                  onClick={() => setShowBlockchainDetails(!showBlockchainDetails)}
+                  className="text-sm text-brand-400 hover:text-brand-500 transition-colors"
+                >
+                  {showBlockchainDetails ? '접기' : '더보기'}
+                </button>
+              </div>
+              {showBlockchainDetails && (
+                <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-dark-text-400">record_id</span>
                   <p className="text-dark-text-100 mt-1 font-mono">{selectedAttendance.recordId || '-'}</p>
@@ -615,7 +702,8 @@ export function Attendances() {
                   <span className="text-dark-text-400">mod_end_block_number</span>
                   <p className="text-dark-text-100 mt-1 font-mono">{selectedAttendance.modEndBlockNumber || '-'}</p>
                 </div>
-              </div>
+                </div>
+              )}
             </div>
 
             {/* 업데이트 날짜 (정정 모드일 때만 표시) */}
@@ -627,21 +715,35 @@ export function Attendances() {
 
             {/* 하단 버튼 */}
             <div className="flex items-center justify-between gap-3 pt-4 border-t border-[#444444]">
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setIsDetailEditMode(false);
-                  setDetailEditForm({
-                    checkIn: selectedAttendance.checkIn || '',
-                    checkOut: selectedAttendance.checkOut || '',
-                    status: selectedAttendance.status,
-                    modificationReason: '',
-                  });
-                }}
-                className={isDetailEditMode ? '' : 'hidden'}
-              >
-                취소하기
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setIsDetailEditMode(false);
+                    setDetailEditForm({
+                      checkIn: selectedAttendance.checkIn || '',
+                      checkOut: selectedAttendance.checkOut || '',
+                      status: selectedAttendance.status,
+                      modificationReason: '',
+                    });
+                  }}
+                  className={isDetailEditMode ? '' : 'hidden'}
+                >
+                  취소하기
+                </Button>
+                {!isDetailEditMode && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setIsDetailModalOpen(false);
+                      setIsDetailEditMode(false);
+                      setShowBlockchainDetails(false);
+                    }}
+                  >
+                    닫기
+                  </Button>
+                )}
+              </div>
               <div className="flex gap-3 ml-auto">
                 {!isDetailEditMode ? (
                   <Button
@@ -674,6 +776,7 @@ export function Attendances() {
                         addToast('근태 데이터가 수정되었습니다.', 'success');
                         setIsDetailEditMode(false);
                         setIsDetailModalOpen(false);
+                        setShowBlockchainDetails(false);
                         fetchAttendances();
                       } catch (error) {
                         addToast('근태 데이터 수정에 실패했습니다.', 'error');
