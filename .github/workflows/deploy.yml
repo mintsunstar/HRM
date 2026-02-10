@@ -34,6 +34,11 @@ jobs:
       - name: Build
         run: npm run build
       
+      - name: Verify build output
+        run: |
+          ls -la dist/
+          cat dist/index.html
+      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
