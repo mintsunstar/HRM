@@ -14,12 +14,8 @@ import { Settings } from '@/pages/Settings';
 import { MyAccount } from '@/pages/MyAccount';
 
 function RootRedirect() {
-  const { isAuthenticated } = useAuthStore();
-  
-  if (isAuthenticated) {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
-  
+  // 루트 경로로 접근한 경우 항상 로그인 페이지로 리다이렉트
+  // (사용자가 명시적으로 로그인을 원하는 경우를 위해)
   return <Navigate to="/login" replace />;
 }
 

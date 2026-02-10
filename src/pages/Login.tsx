@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/services/api';
@@ -9,8 +9,11 @@ import { LoadingSpinner } from '@/components/common/Loading';
 
 export function Login() {
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const { login, isAuthenticated } = useAuthStore();
   const { addToast } = useToastStore();
+  
+  // 로그인 페이지는 항상 표시 (인증 상태와 관계없이)
+  // 사용자가 명시적으로 로그인 페이지로 접근한 경우 로그인 화면을 보여줌
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
