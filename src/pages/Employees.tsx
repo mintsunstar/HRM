@@ -880,7 +880,6 @@ export function Employees() {
               }}
               className="w-4 h-4 rounded border-[#444444] bg-[rgba(2,6,23,.25)] text-brand-500 focus:ring-brand-500 focus:ring-2 cursor-pointer"
             />,
-            '사번',
             '이름',
             '이메일',
             '재직상태',
@@ -907,7 +906,6 @@ export function Employees() {
                   className="w-4 h-4 rounded border-[#444444] bg-[rgba(2,6,23,.25)] text-brand-500 focus:ring-brand-500 focus:ring-2 cursor-pointer"
                 />
               </TableCell>
-              <TableCell>{employee.employeeId}</TableCell>
               <TableCell>{employee.name}</TableCell>
               <TableCell>{employee.email}</TableCell>
               <TableCell>
