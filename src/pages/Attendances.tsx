@@ -270,18 +270,6 @@ export function Attendances() {
               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-dark-text-400 pointer-events-none" />
             </div>
           </div>
-          <Select
-            label="상태"
-            options={[
-              { value: 'all', label: '전체' },
-              { value: 'normal', label: '정상' },
-              { value: 'late', label: '지각' },
-              { value: 'absent', label: '결근' },
-              { value: 'leave', label: '휴가' },
-            ]}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          />
           <Input
             label="검색(이름/사번/이메일)"
             placeholder="예: 0008 / 김 / user@"
@@ -304,7 +292,6 @@ export function Attendances() {
                   end: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
                 });
                 setSearchTerm('');
-                setStatusFilter('all');
               }}
             >
               초기화
@@ -360,7 +347,6 @@ export function Attendances() {
             '퇴근시간',
             '상태',
             '근무시간',
-            '작업',
           ]}
         >
           {paginatedAttendances.map((attendance) => {
@@ -411,27 +397,6 @@ export function Attendances() {
                   </span>
                 </TableCell>
                 <TableCell>{attendance.workHours ? `${attendance.workHours}시간` : '-'}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedAttendance(attendance);
-                      setIsDetailEditMode(false);
-                      setShowBlockchainDetails(false);
-                      setDetailEditForm({
-                        checkIn: attendance.checkIn || '',
-                        checkOut: attendance.checkOut || '',
-                        status: attendance.status,
-                        modificationReason: '',
-                      });
-                      setIsDetailModalOpen(true);
-                    }}
-                    className="text-brand-400 hover:text-brand-500"
-                  >
-                    상세보기
-                  </Button>
-                </TableCell>
               </TableRow>
             );
           })}
