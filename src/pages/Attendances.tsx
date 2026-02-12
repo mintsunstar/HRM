@@ -355,7 +355,6 @@ export function Attendances() {
               className="w-4 h-4 rounded border-[#444444] bg-[rgba(2,6,23,.25)] text-brand-500 focus:ring-brand-500 focus:ring-2 cursor-pointer"
             />,
             '날짜',
-            '사번',
             '이름',
             '출근시간',
             '퇴근시간',
@@ -387,7 +386,6 @@ export function Attendances() {
                   />
                 </TableCell>
                 <TableCell>{attendance.date}</TableCell>
-                <TableCell>{attendance.employeeId}</TableCell>
                 <TableCell>{getEmployeeName(attendance.employeeId)}</TableCell>
                 <TableCell>{attendance.checkIn || '-'}</TableCell>
                 <TableCell>{attendance.checkOut || '-'}</TableCell>

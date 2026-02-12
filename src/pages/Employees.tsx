@@ -55,14 +55,26 @@ export function Employees() {
     joinDate: new Date().toISOString().split('T')[0],
   });
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
-  useEffect(() => {
-    filterEmployees();
-  }, [employees, searchTerm, departmentFilter, statusFilter]);
-
+  // 직원등록 완료 상태
+  const [isEmployeeRegistered, setIsEmployeeRegistered] = useState(false);
+  const [registeredEmployee, setRegisteredEmployee] = useState<User | null>(null);
+  const [showInviteTemplate, setShowInviteTemplate] = useState(false);
+  
+  // 이메일 템플릿 상태
+  const [emailTemplate, setEmailTemplate] = useState({
+    mode: 'invite' as 'invite' | 'notice',
+    name: '',
+    email: '',
+    subject: '',
+    content: '',
+  });
+  
+  // 이메일 템플릿 설정
+  const [emailSettings, setEmailSettings] = useState({
+    companyName: 'BDGen',
+    supportEmail: 'support@bdgen.co.kr',
+    signupUrl: 'https://your-portal.example.com/signup',
+  });
 
   const fetchEmployees = async () => {
     try {
@@ -77,10 +89,47 @@ export function Employees() {
       setEmployees(allEmployees);
     } catch (error) {
       addToast('직원 목록을 불러오는데 실패했습니다.', 'error');
+      setEmployees([]);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchEmployees();
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    let filtered = [...employees];
+
+    // 검색
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (emp) =>
+          emp.name.toLowerCase().includes(term) ||
+          emp.email.toLowerCase().includes(term) ||
+          emp.employeeId.toLowerCase().includes(term)
+      );
+    }
+
+    // 부서 필터
+    if (departmentFilter !== 'all') {
+      filtered = filtered.filter((emp) => emp.department === departmentFilter);
+    }
+
+    // 상태 필터
+    if (statusFilter === 'active') {
+      filtered = filtered.filter((emp) => emp.isActive);
+    } else if (statusFilter === 'inactive') {
+      filtered = filtered.filter((emp) => !emp.isActive);
+    }
+
+    setFilteredEmployees(filtered);
+    setCurrentPage(1);
+  }, [employees, searchTerm, departmentFilter, statusFilter]);
 
   const filterEmployees = () => {
     let filtered = [...employees];
@@ -156,6 +205,191 @@ export function Employees() {
       addToast(error instanceof Error ? error.message : '직원 초대에 실패했습니다.', 'error');
     }
   };
+
+  const handleRegisterEmployee = async () => {
+    try {
+      // 중복 체크
+      const existingEmail = employees.find((e) => e.email === inviteForm.email);
+      if (existingEmail) {
+        addToast('이미 등록된 이메일입니다.', 'error');
+        return;
+      }
+
+      const existingEmployeeId = employees.find((e) => e.employeeId === inviteForm.employeeId);
+      if (existingEmployeeId) {
+        addToast('이미 등록된 사번입니다.', 'error');
+        return;
+      }
+
+      const newEmployee = await usersApi.createUser(inviteForm);
+      addToast('직원등록이 완료되었습니다!', 'success');
+      
+      // 모달 닫기 및 폼 초기화
+      setIsInviteModalOpen(false);
+      setInviteForm({
+        email: '',
+        name: '',
+        employeeId: '',
+        department: '',
+        position: '',
+        level: 3 as UserLevel,
+        isActive: true,
+        joinDate: new Date().toISOString().split('T')[0],
+      });
+      
+      fetchEmployees();
+    } catch (error) {
+      addToast(error instanceof Error ? error.message : '직원 등록에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleSendInvite = async () => {
+    try {
+      // TODO: 실제 API 연동 시 이메일 전송 로직 구현
+      addToast('초대 메일이 발송되었습니다.', 'success');
+      setShowInviteTemplate(false);
+      setIsEmployeeRegistered(false);
+      setRegisteredEmployee(null);
+      setInviteForm({
+        email: '',
+        name: '',
+        employeeId: '',
+        department: '',
+        position: '',
+        level: 3 as UserLevel,
+        isActive: true,
+        joinDate: new Date().toISOString().split('T')[0],
+      });
+      if (location.pathname === '/admin/employees/add') {
+        navigate('/admin/employees');
+      }
+    } catch (error) {
+      addToast('초대 메일 발송에 실패했습니다.', 'error');
+    }
+  };
+
+  const buildInviteEmailTemplate = (receiverName: string, signupUrl: string, supportEmail: string, companyName: string) => {
+    return `
+<div style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #111;">
+  <h2 style="margin: 0 0 12px;">[${companyName}] 내근무증명 계정 등록 안내</h2>
+  <p style="margin: 0 0 10px;">안녕하세요, <strong>${receiverName}</strong>님.</p>
+  <p style="margin: 0 0 14px;">
+    내근무증명(근태포털) 사용을 위해 계정이 등록되었습니다.<br/>
+    아래 버튼을 눌러 <strong>닉네임 및 비밀번호 설정</strong>을 완료해 주세요.
+  </p>
+
+  <div style="margin: 18px 0;">
+    <a href="${signupUrl}"
+       style="display:inline-block; padding: 12px 16px; text-decoration:none; border-radius: 10px; border: 1px solid #111; color:#111;">
+      가입 완료하기
+    </a>
+  </div>
+
+  <p style="margin: 0 0 10px; color:#444;">
+    버튼이 동작하지 않으면 아래 링크를 복사해 브라우저에 붙여넣어 주세요:
+  </p>
+  <p style="margin: 0 0 18px; word-break: break-all; color:#666;">
+    ${signupUrl}
+  </p>
+
+  <hr style="border:none; border-top:1px solid #eee; margin: 18px 0;" />
+
+  <p style="margin: 0; color:#666; font-size: 12px;">
+    문의: <a href="mailto:${supportEmail}" style="color:#666;">${supportEmail}</a><br/>
+    ※ 본 메일은 발신 전용입니다.
+  </p>
+</div>
+    `.trim();
+  };
+
+  const buildNoticeEmailTemplate = (receiverName: string, title: string, summaryLines: string[], footerNote: string, companyName: string) => {
+    const lines = summaryLines.map(l => `<li style="margin: 0 0 6px;">${l}</li>`).join("");
+    return `
+<div style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #111;">
+  <h2 style="margin: 0 0 12px;">[${companyName}] 시스템 알림</h2>
+  <p style="margin: 0 0 10px;">안녕하세요, <strong>${receiverName}</strong>님.</p>
+  <p style="margin: 0 0 12px;"><strong>${title}</strong></p>
+
+  <ul style="margin: 0 0 16px; padding-left: 18px;">
+    ${lines}
+  </ul>
+
+  <hr style="border:none; border-top:1px solid #eee; margin: 18px 0;" />
+
+  <p style="margin: 0; color:#666; font-size: 12px;">
+    ${footerNote}
+  </p>
+</div>
+    `.trim();
+  };
+
+  const applyEmailTemplate = () => {
+    if (emailTemplate.mode === 'invite') {
+      setEmailTemplate({
+        ...emailTemplate,
+        subject: '[BDGen HRM] 계정 등록 안내',
+        content: buildInviteEmailTemplate(
+          emailTemplate.name || inviteForm.name,
+          emailSettings.signupUrl,
+          emailSettings.supportEmail,
+          emailSettings.companyName
+        ),
+      });
+    } else {
+      setEmailTemplate({
+        ...emailTemplate,
+        subject: '[BDGen HRM] 시스템 알림',
+        content: buildNoticeEmailTemplate(
+          emailTemplate.name || inviteForm.name,
+          '요청하신 처리가 완료되었습니다.',
+          [
+            '요청하신 내역이 정상 처리되었습니다.',
+            '추가 문의가 있으시면 고객지원으로 연락해주세요.'
+          ],
+          '본 메일은 발신 전용입니다.',
+          emailSettings.companyName
+        ),
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (showInviteTemplate && registeredEmployee) {
+      applyEmailTemplate();
+    }
+  }, [emailTemplate.mode]);
+
+  useEffect(() => {
+    if (showInviteTemplate && registeredEmployee) {
+      if (emailTemplate.mode === 'invite') {
+        setEmailTemplate(prev => ({
+          ...prev,
+          subject: '[BDGen HRM] 계정 등록 안내',
+          content: buildInviteEmailTemplate(
+            prev.name || registeredEmployee.name,
+            emailSettings.signupUrl,
+            emailSettings.supportEmail,
+            emailSettings.companyName
+          ),
+        }));
+      } else if (emailTemplate.mode === 'notice') {
+        setEmailTemplate(prev => ({
+          ...prev,
+          subject: '[BDGen HRM] 시스템 알림',
+          content: buildNoticeEmailTemplate(
+            prev.name || registeredEmployee.name,
+            '요청하신 처리가 완료되었습니다.',
+            [
+              '요청하신 내역이 정상 처리되었습니다.',
+              '추가 문의가 있으시면 고객지원으로 연락해주세요.'
+            ],
+            '본 메일은 발신 전용입니다.',
+            emailSettings.companyName
+          ),
+        }));
+      }
+    }
+  }, [emailTemplate.mode]);
 
   const handleViewDetail = (employee: User) => {
     setSelectedEmployee(employee);
@@ -296,17 +530,33 @@ export function Employees() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-dark-text-100">직원관리 / 직원등록</h1>
+          <div>
+            <h1 className="text-3xl font-bold text-dark-text-100">직원관리 / 직원등록</h1>
+            <p className="text-sm text-dark-text-400 mt-2">신규직원 등록 및 초대 발송</p>
+          </div>
           <Button variant="secondary" onClick={() => navigate('/admin/employees')}>
             목록으로
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 입력 폼 */}
+        {!isEmployeeRegistered ? (
           <div className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg">
-            <h2 className="text-lg font-extrabold text-dark-text-100 mb-6">초대 정보</h2>
-            <div className="space-y-4">
+            <h2 className="text-lg font-extrabold text-dark-text-100 mb-6">직원 기본정보 (관리자 필수입력)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="사번 (필수)"
+                value={inviteForm.employeeId}
+                onChange={(e) => setInviteForm({ ...inviteForm, employeeId: e.target.value })}
+                placeholder="0008"
+                required
+              />
+              <Input
+                label="사원명 (필수)"
+                value={inviteForm.name}
+                onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
+                placeholder="홍길동"
+                required
+              />
               <Input
                 label="이메일 (필수)"
                 type="email"
@@ -315,22 +565,20 @@ export function Employees() {
                 placeholder="user@company.com"
                 required
               />
-              <Input
-                label="이름 (필수)"
-                value={inviteForm.name}
-                onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
-                placeholder="홍길동"
-                required
-              />
-              <Input
-                label="사번 (필수)"
-                value={inviteForm.employeeId}
-                onChange={(e) => setInviteForm({ ...inviteForm, employeeId: e.target.value })}
-                placeholder="0008"
-                required
-              />
+              <div>
+                <label className="block text-sm text-dark-text-secondary mb-1">입사일 (필수)</label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={inviteForm.joinDate}
+                    onChange={(e) => setInviteForm({ ...inviteForm, joinDate: e.target.value })}
+                    className="w-full px-3 py-2.5 pr-10 rounded-bdg-10 border border-[#444444] bg-[rgba(2,6,23,.25)] text-dark-text-100 placeholder-dark-text-400 focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)]"
+                  />
+                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-dark-text-400 pointer-events-none" />
+                </div>
+              </div>
               <Select
-                label="권한 레벨"
+                label="권한레벨"
                 options={[
                   { value: '3', label: 'User' },
                   { value: '2', label: 'Admin' },
@@ -339,39 +587,179 @@ export function Employees() {
                 value={String(inviteForm.level)}
                 onChange={(e) => setInviteForm({ ...inviteForm, level: Number(e.target.value) as UserLevel })}
               />
-              <div className="flex gap-3 mt-6">
-                <Button onClick={handleInvite} className="flex-1">
-                  초대 발송
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    addToast('초대 메일 미리보기는 API 연동 시 구현됩니다.', 'info');
-                  }}
-                >
-                  미리보기
-                </Button>
-              </div>
-              <div className="text-xs text-dark-text-400 mt-4">
-                * 초대 발송 → 계정 생성 → 가입 완료 링크 이메일 발송(정책)
-              </div>
+            </div>
+            <div className="flex justify-end mt-6">
+              <Button onClick={handleRegisterEmployee}>
+                저장
+              </Button>
             </div>
           </div>
+        ) : (
+          <div className="space-y-6">
+            {!showInviteTemplate ? (
+              <div className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-lg font-semibold text-dark-text-100">직원등록이 완료되었습니다!</p>
+                    <p className="text-sm text-dark-text-400 mt-1">
+                      {registeredEmployee?.name} ({registeredEmployee?.employeeId}) 님이 등록되었습니다.
+                    </p>
+                  </div>
+                  <Button onClick={() => {
+                    // 템플릿에 직원 정보 자동 적용
+                    setEmailTemplate({
+                      mode: 'invite',
+                      name: registeredEmployee?.name || '',
+                      email: registeredEmployee?.email || '',
+                      subject: '[BDGen HRM] 계정 등록 안내',
+                      content: buildInviteEmailTemplate(
+                        registeredEmployee?.name || '',
+                        emailSettings.signupUrl,
+                        emailSettings.supportEmail,
+                        emailSettings.companyName
+                      ),
+                    });
+                    setShowInviteTemplate(true);
+                  }}>
+                    등록 및 저장
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* 템플릿 작성 영역 */}
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg">
+                    <h2 className="text-lg font-extrabold text-dark-text-100 mb-4">초대 메일 작성</h2>
+                    
+                    {/* 템플릿 모드 선택 */}
+                    <div className="mb-4">
+                      <label className="block text-sm text-dark-text-secondary mb-2">템플릿 모드</label>
+                      <Select
+                        options={[
+                          { value: 'invite', label: '초대/가입요청' },
+                          { value: 'notice', label: '일반 알림' },
+                        ]}
+                        value={emailTemplate.mode}
+                        onChange={(e) => {
+                          setEmailTemplate({ ...emailTemplate, mode: e.target.value as 'invite' | 'notice' });
+                          setTimeout(() => applyEmailTemplate(), 0);
+                        }}
+                      />
+                    </div>
 
-          {/* 운영 가이드 */}
-          <div className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg">
-            <h2 className="text-lg font-extrabold text-dark-text-100 mb-4">운영 가이드</h2>
-            <ul className="space-y-2 text-sm text-dark-text-400">
-              <li>• 필수: 이메일/이름/사번</li>
-              <li>• 이미 존재(Inactive) → 재초대 정책에 따라 Active 전환 후 가입 재진행</li>
-              <li>• 초대/비활성화는 감사 로그를 남기는 것을 권장</li>
-            </ul>
-            <hr className="border-[#444444] my-4" />
-            <div className="text-xs text-dark-text-400">
-              프로토타입 v1 (클릭 가능한 HTML)
-            </div>
+                    {/* 수신자 정보 */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <Input
+                        label="수신자 이름 (name)"
+                        value={emailTemplate.name}
+                        onChange={(e) => {
+                          const newName = e.target.value;
+                          setEmailTemplate(prev => {
+                            const updated = { ...prev, name: newName };
+                            // 템플릿 내용 자동 업데이트
+                            if (prev.mode === 'invite') {
+                              updated.content = buildInviteEmailTemplate(
+                                newName || registeredEmployee?.name || '',
+                                emailSettings.signupUrl,
+                                emailSettings.supportEmail,
+                                emailSettings.companyName
+                              );
+                            } else {
+                              updated.content = buildNoticeEmailTemplate(
+                                newName || registeredEmployee?.name || '',
+                                '요청하신 처리가 완료되었습니다.',
+                                [
+                                  '요청하신 내역이 정상 처리되었습니다.',
+                                  '추가 문의가 있으시면 고객지원으로 연락해주세요.'
+                                ],
+                                '본 메일은 발신 전용입니다.',
+                                emailSettings.companyName
+                              );
+                            }
+                            return updated;
+                          });
+                        }}
+                        placeholder="홍길동"
+                      />
+                      <Input
+                        label="수신자 이메일 (email)"
+                        type="email"
+                        value={emailTemplate.email}
+                        onChange={(e) => setEmailTemplate({ ...emailTemplate, email: e.target.value })}
+                        placeholder="user@company.com"
+                      />
+                    </div>
+
+                    {/* 제목 */}
+                    <div className="mb-4">
+                      <Input
+                        label="제목 (subject)"
+                        value={emailTemplate.subject}
+                        onChange={(e) => setEmailTemplate({ ...emailTemplate, subject: e.target.value })}
+                        placeholder="이메일 제목"
+                      />
+                    </div>
+
+                    {/* 내용 */}
+                    <div className="mb-4">
+                      <label className="block text-sm text-dark-text-secondary mb-2">내용 (content: HTML)</label>
+                      <textarea
+                        value={emailTemplate.content}
+                        onChange={(e) => setEmailTemplate({ ...emailTemplate, content: e.target.value })}
+                        rows={12}
+                        className="w-full px-3 py-2.5 rounded-bdg-10 border border-[#444444] bg-[rgba(2,6,23,.25)] text-dark-text-100 placeholder-dark-text-400 focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)] font-mono text-sm"
+                        placeholder="HTML 내용을 입력하세요"
+                      />
+                      <p className="text-xs text-dark-text-400 mt-1">HTML 문자열 그대로 전송됩니다.</p>
+                    </div>
+
+                    {/* 버튼 */}
+                    <div className="flex items-center justify-between pt-4 border-t border-[#444444]">
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          // 미리보기 모달 표시 (추후 구현)
+                          addToast('미리보기 기능은 현재 화면 오른쪽에서 확인할 수 있습니다.', 'info');
+                        }}
+                      >
+                        초대 메일 미리보기
+                      </Button>
+                      <div className="flex gap-3">
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setShowInviteTemplate(false);
+                            setIsEmployeeRegistered(false);
+                            setRegisteredEmployee(null);
+                          }}
+                        >
+                          취소
+                        </Button>
+                        <Button onClick={handleSendInvite} className="min-w-[140px] px-6 py-2.5 font-bold text-base">
+                          등록 및 저장
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 미리보기 영역 */}
+                <div className="lg:col-span-1">
+                  <div className="bg-dark-surface-850 rounded-bdg-10 p-6 border border-[#444444] shadow-bdg sticky top-6">
+                    <h2 className="text-lg font-extrabold text-dark-text-100 mb-4">미리보기</h2>
+                    <div className="bg-white rounded-bdg-10 p-4 border border-[#444444] max-h-[600px] overflow-y-auto">
+                      <div 
+                        dangerouslySetInnerHTML={{ __html: emailTemplate.content || '<p>내용을 입력하세요</p>' }}
+                        style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -380,7 +768,7 @@ export function Employees() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-dark-text-100">직원관리 / 직원목록</h1>
+          <h1 className="text-3xl font-bold text-dark-text-100">직원목록</h1>
           <p className="text-sm text-dark-text-400 mt-2">등록된 직원정보 목록, 신규등록 및 초대 · 정보 수정</p>
         </div>
         <div className="flex space-x-2">
@@ -388,7 +776,7 @@ export function Employees() {
             <Download className="w-4 h-4 mr-2" />
             Excel 다운로드
           </Button>
-          <Button onClick={() => navigate('/admin/employees/add')} className="w-[168px] flex items-center justify-center">
+          <Button onClick={() => setIsInviteModalOpen(true)} className="w-[168px] flex items-center justify-center">
             <Plus className="w-4 h-4 mr-2" />
             신규 직원 등록
           </Button>
@@ -590,7 +978,7 @@ export function Employees() {
             navigate('/admin/employees');
           }
         }}
-        title="직원 초대"
+        title="신규직원 등록 및 직원초대"
       >
         <div className="space-y-4">
           <Input
@@ -646,7 +1034,7 @@ export function Employees() {
             >
               취소
             </Button>
-            <Button onClick={handleInvite}>초대</Button>
+            <Button onClick={handleRegisterEmployee}>등록 및 저장</Button>
           </div>
         </div>
       </Modal>
@@ -710,8 +1098,8 @@ export function Employees() {
                           setEditForm({ ...editForm, joinDate: e.target.value });
                         }
                       }}
-                      disabled={!isEditMode}
-                      className="w-full px-3 py-2.5 pr-10 rounded-bdg-10 border border-[#444444] bg-[rgba(2,6,23,.25)] text-dark-text-100 placeholder-dark-text-400 focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)] disabled:opacity-100 disabled:cursor-not-allowed"
+                      readOnly={!isEditMode}
+                      className="w-full px-3 py-2.5 pr-10 rounded-bdg-10 border border-[#444444] bg-[rgba(2,6,23,.25)] text-dark-text-100 placeholder-dark-text-400 focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)]"
                     />
                     <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-dark-text-400 pointer-events-none" />
                   </div>

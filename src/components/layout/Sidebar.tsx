@@ -22,13 +22,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { path: '/admin/dashboard', label: '대시보드' },
   { path: '/admin/attendances', label: '전사 근태 관리' },
-  {
-    label: '직원 관리',
-    children: [
-      { path: '/admin/employees', label: '직원목록' },
-      { path: '/admin/employees/add', label: '직원등록' },
-    ],
-  },
+  { path: '/admin/employees', label: '직원목록' },
   {
     label: '시스템 운영',
     children: [
