@@ -38,6 +38,7 @@ jobs:
         run: |
           ls -la dist/
           cat dist/index.html
+          echo "Build verification complete"
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
