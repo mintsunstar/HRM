@@ -788,7 +788,7 @@ export function Employees() {
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <div className="md:col-span-1">
             <Input
-              label="검색(이름/이메일/사번)"
+              label="검색(이메일)"
               placeholder="예: 0008 / user@"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

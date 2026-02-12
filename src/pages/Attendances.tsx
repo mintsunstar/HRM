@@ -271,7 +271,7 @@ export function Attendances() {
             </div>
           </div>
           <Input
-            label="검색(이름/사번/이메일)"
+            label="검색(이메일)"
             placeholder="예: 0008 / 김 / user@"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
