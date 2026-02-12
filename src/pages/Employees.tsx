@@ -883,6 +883,7 @@ export function Employees() {
             '이름',
             '이메일',
             '재직상태',
+            '입사일',
             '부서',
             '직책',
             '작업',
@@ -919,6 +920,7 @@ export function Employees() {
                   {employee.isActive ? '재직' : '퇴사'}
                 </span>
               </TableCell>
+              <TableCell>{employee.joinDate ? format(new Date(employee.joinDate), 'yyyy-MM-dd') : '-'}</TableCell>
               <TableCell>{employee.department}</TableCell>
               <TableCell>{employee.position}</TableCell>
               <TableCell>
