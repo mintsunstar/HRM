@@ -55,6 +55,13 @@ export function Employees() {
     joinDate: new Date().toISOString().split('T')[0],
   });
 
+  // 필드 유효성 검사 에러 상태
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string;
+    email?: string;
+    employeeId?: string;
+  }>({});
+
   // 직원등록 완료 상태
   const [isEmployeeRegistered, setIsEmployeeRegistered] = useState(false);
   const [registeredEmployee, setRegisteredEmployee] = useState<User | null>(null);
@@ -206,26 +213,93 @@ export function Employees() {
     }
   };
 
+  // 필드 유효성 검사
+  const validateField = (field: 'name' | 'email' | 'employeeId', value: string) => {
+    const errors: typeof fieldErrors = { ...fieldErrors };
+
+    if (field === 'name') {
+      if (!value) {
+        errors.name = '이름을 입력해주세요.';
+      } else if (value.length < 2 || value.length > 50) {
+        errors.name = '이름은 2~50자로 입력해주세요.';
+      } else {
+        delete errors.name;
+      }
+    } else if (field === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!value) {
+        errors.email = '이메일을 입력해주세요.';
+      } else if (!emailRegex.test(value)) {
+        errors.email = '유효한 이메일 형식이 아닙니다.';
+      } else {
+        const existingEmail = employees.find((e) => e.email === value);
+        if (existingEmail) {
+          errors.email = '이미 등록된 이메일입니다.';
+        } else {
+          delete errors.email;
+        }
+      }
+    } else if (field === 'employeeId') {
+      if (!value) {
+        errors.employeeId = '사번을 입력해주세요.';
+      } else {
+        const existingEmployeeId = employees.find((e) => e.employeeId === value);
+        if (existingEmployeeId) {
+          errors.employeeId = '이미 사용 중인 사번입니다.';
+        } else {
+          delete errors.employeeId;
+        }
+      }
+    }
+
+    setFieldErrors(errors);
+    return !errors[field];
+  };
+
   const handleRegisterEmployee = async () => {
+    // 필수 필드 검증
+    if (!inviteForm.name || !inviteForm.email || !inviteForm.employeeId) {
+      addToast('필수 항목을 모두 입력해주세요.', 'error');
+      return;
+    }
+
+    // 이름 길이 검증
+    if (inviteForm.name.length < 2 || inviteForm.name.length > 50) {
+      setFieldErrors({ ...fieldErrors, name: '이름은 2~50자로 입력해주세요.' });
+      addToast('이름은 2~50자로 입력해주세요.', 'error');
+      return;
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inviteForm.email)) {
+      setFieldErrors({ ...fieldErrors, email: '유효한 이메일 형식이 아닙니다.' });
+      addToast('유효한 이메일 형식을 입력해주세요.', 'error');
+      return;
+    }
+
+    // 중복 체크
+    const existingEmail = employees.find((e) => e.email === inviteForm.email);
+    if (existingEmail) {
+      setFieldErrors({ ...fieldErrors, email: '이미 등록된 이메일입니다.' });
+      addToast('이미 등록된 이메일입니다.', 'error');
+      return;
+    }
+
+    const existingEmployeeId = employees.find((e) => e.employeeId === inviteForm.employeeId);
+    if (existingEmployeeId) {
+      setFieldErrors({ ...fieldErrors, employeeId: '이미 사용 중인 사번입니다.' });
+      addToast('이미 사용 중인 사번입니다.', 'error');
+      return;
+    }
+
     try {
-      // 중복 체크
-      const existingEmail = employees.find((e) => e.email === inviteForm.email);
-      if (existingEmail) {
-        addToast('이미 등록된 이메일입니다.', 'error');
-        return;
-      }
-
-      const existingEmployeeId = employees.find((e) => e.employeeId === inviteForm.employeeId);
-      if (existingEmployeeId) {
-        addToast('이미 등록된 사번입니다.', 'error');
-        return;
-      }
-
       const newEmployee = await usersApi.createUser(inviteForm);
       addToast('직원등록이 완료되었습니다!', 'success');
       
       // 모달 닫기 및 폼 초기화
       setIsInviteModalOpen(false);
+      setFieldErrors({});
       setInviteForm({
         email: '',
         name: '',
@@ -974,6 +1048,17 @@ export function Employees() {
         isOpen={isInviteModalOpen}
         onClose={() => {
           setIsInviteModalOpen(false);
+          setFieldErrors({});
+          setInviteForm({
+            email: '',
+            name: '',
+            employeeId: '',
+            department: '',
+            position: '',
+            level: 3 as UserLevel,
+            isActive: true,
+            joinDate: new Date().toISOString().split('T')[0],
+          });
           if (location.pathname === '/admin/employees/add') {
             navigate('/admin/employees');
           }
@@ -981,52 +1066,104 @@ export function Employees() {
         title="신규직원 등록 및 직원초대"
       >
         <div className="space-y-4">
-          <Input
-            label="이메일"
-            type="email"
-            value={inviteForm.email}
-            onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-            required
-          />
-          <Input
-            label="이름"
-            value={inviteForm.name}
-            onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
-            required
-          />
-          <Input
-            label="사번"
-            value={inviteForm.employeeId}
-            onChange={(e) => setInviteForm({ ...inviteForm, employeeId: e.target.value })}
-            required
-          />
-          <Input
-            label="부서"
-            value={inviteForm.department}
-            onChange={(e) => setInviteForm({ ...inviteForm, department: e.target.value })}
-            required
-          />
-          <Input
-            label="직책"
-            value={inviteForm.position}
-            onChange={(e) => setInviteForm({ ...inviteForm, position: e.target.value })}
-            required
-          />
+          {/* 1. 이름 */}
+          <div>
+            <Input
+              label="이름 (필수)"
+              value={inviteForm.name}
+              onChange={(e) => {
+                setInviteForm({ ...inviteForm, name: e.target.value });
+                validateField('name', e.target.value);
+              }}
+              placeholder="홍길동"
+              required
+            />
+            {fieldErrors.name && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.name}</p>
+            )}
+            {!fieldErrors.name && inviteForm.name && (
+              <p className="mt-1 text-xs text-dark-text-400">2~50자로 입력해주세요.</p>
+            )}
+          </div>
+
+          {/* 2. 이메일 */}
+          <div>
+            <Input
+              label="이메일 (필수)"
+              type="email"
+              value={inviteForm.email}
+              onChange={(e) => {
+                setInviteForm({ ...inviteForm, email: e.target.value });
+                validateField('email', e.target.value);
+              }}
+              placeholder="user@company.com"
+              required
+            />
+            {fieldErrors.email && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>
+            )}
+          </div>
+
+          {/* 3. 사번 */}
+          <div>
+            <Input
+              label="사번 (필수)"
+              value={inviteForm.employeeId}
+              onChange={(e) => {
+                setInviteForm({ ...inviteForm, employeeId: e.target.value });
+                validateField('employeeId', e.target.value);
+              }}
+              placeholder="0008"
+              required
+            />
+            {fieldErrors.employeeId && (
+              <p className="mt-1 text-xs text-red-500">{fieldErrors.employeeId}</p>
+            )}
+          </div>
+
+          {/* 4. 권한 레벨 */}
           <Select
-            label="권한 레벨"
+            label="권한 레벨 (필수)"
             options={[
               { value: '3', label: 'User (Level 3)' },
               { value: '2', label: 'Admin (Level 2)' },
-              { value: '1', label: 'Super Admin (Level 1)' },
             ]}
             value={String(inviteForm.level)}
             onChange={(e) => setInviteForm({ ...inviteForm, level: Number(e.target.value) as UserLevel })}
+            required
           />
-          <div className="flex justify-end space-x-2">
+
+          {/* 5. 입사일 */}
+          <div>
+            <label className="block text-sm text-dark-text-secondary mb-1">입사일</label>
+            <div className="relative">
+              <input
+                type="date"
+                value={inviteForm.joinDate}
+                onChange={(e) => setInviteForm({ ...inviteForm, joinDate: e.target.value })}
+                className="w-full px-3 py-2.5 pr-10 rounded-bdg-10 border border-[#444444] bg-[rgba(2,6,23,.25)] text-dark-text-100 placeholder-dark-text-400 focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)]"
+              />
+              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-dark-text-400 pointer-events-none" />
+            </div>
+            <p className="mt-1 text-xs text-dark-text-400">기본값: 오늘</p>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4 border-t border-[#444444]">
             <Button
               variant="secondary"
               onClick={() => {
                 setIsInviteModalOpen(false);
+                setFieldErrors({});
+                setInviteForm({
+                  email: '',
+                  name: '',
+                  employeeId: '',
+                  department: '',
+                  position: '',
+                  level: 3 as UserLevel,
+                  isActive: true,
+                  joinDate: new Date().toISOString().split('T')[0],
+                });
                 if (location.pathname === '/admin/employees/add') {
                   navigate('/admin/employees');
                 }
