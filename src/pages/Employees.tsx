@@ -13,7 +13,7 @@ import { Modal } from '@/components/common/Modal';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
-import { Plus, Download } from 'lucide-react';
+import { Plus, Download, Eye, EyeOff } from 'lucide-react';
 import { Calendar } from 'lucide-react';
 
 export function Employees() {
@@ -42,6 +42,10 @@ export function Employees() {
     newPassword: '',
     confirmPassword: '',
   });
+
+  // 비밀번호 표시/숨김 상태
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   // 초대 폼
   const [inviteForm, setInviteForm] = useState({
@@ -518,7 +522,9 @@ export function Employees() {
       newPassword: '',
       confirmPassword: '',
     });
-    setIsEditMode(false);
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setIsEditMode(true); // 기본적으로 수정 가능한 상태
     setIsDetailModalOpen(true);
   };
 
@@ -1260,6 +1266,8 @@ export function Employees() {
           setIsDetailModalOpen(false);
           setIsEditMode(false);
           setSelectedEmployee(null);
+          setShowCurrentPassword(false);
+          setShowNewPassword(false);
         }}
         title="직원정보 상세보기"
         size="xl"
@@ -1276,43 +1284,19 @@ export function Employees() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-dark-text-secondary mb-1">사번</label>
-                  {isEditMode ? (
-                    <Input
-                      value={editForm.employeeId || selectedEmployee.employeeId}
-                      onChange={(e) => setEditForm({ ...editForm, employeeId: e.target.value })}
-                    />
-                  ) : (
-                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                      {selectedEmployee.employeeId}
-                    </div>
-                  )}
-                </div>
-                <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">이름</label>
-                  {isEditMode ? (
-                    <Input
-                      value={editForm.name || selectedEmployee.name}
-                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    />
-                  ) : (
-                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                      {selectedEmployee.name}
-                    </div>
-                  )}
+                  <Input
+                    value={editForm.name || selectedEmployee.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">입사일</label>
                   <div className="relative">
                     <input
                       type="date"
-                      value={isEditMode ? (editForm.joinDate || selectedEmployee.joinDate) : selectedEmployee.joinDate}
-                      onChange={(e) => {
-                        if (isEditMode) {
-                          setEditForm({ ...editForm, joinDate: e.target.value });
-                        }
-                      }}
-                      readOnly={!isEditMode}
+                      value={editForm.joinDate || selectedEmployee.joinDate}
+                      onChange={(e) => setEditForm({ ...editForm, joinDate: e.target.value })}
                       className="w-full px-3 py-2.5 pr-10 rounded-bdg-10 border border-[#444444] bg-[rgba(2,6,23,.25)] text-dark-text-100 placeholder-dark-text-400 focus:outline-none focus:border-[rgba(56,189,248,.65)] focus:shadow-[0_0_0_3px_rgba(56,189,248,.12)]"
                     />
                     <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-dark-text-400 pointer-events-none" />
@@ -1326,28 +1310,17 @@ export function Employees() {
                       { value: '2', label: 'Admin' },
                       { value: '3', label: 'User' },
                     ]}
-                    value={String(isEditMode ? (editForm.level ?? selectedEmployee.level) : selectedEmployee.level)}
-                    onChange={(e) => {
-                      if (isEditMode) {
-                        setEditForm({ ...editForm, level: Number(e.target.value) as UserLevel });
-                      }
-                    }}
-                    disabled={!isEditMode}
+                    value={String(editForm.level ?? selectedEmployee.level)}
+                    onChange={(e) => setEditForm({ ...editForm, level: Number(e.target.value) as UserLevel })}
                   />
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">이메일</label>
-                  {isEditMode ? (
-                    <Input
-                      type="email"
-                      value={editForm.email || selectedEmployee.email}
-                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    />
-                  ) : (
-                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                      {selectedEmployee.email}
-                    </div>
-                  )}
+                  <Input
+                    type="email"
+                    value={editForm.email || selectedEmployee.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">근무상태</label>
@@ -1356,16 +1329,8 @@ export function Employees() {
                       { value: 'active', label: '재직중' },
                       { value: 'inactive', label: '퇴사' },
                     ]}
-                    value={isEditMode 
-                      ? (editForm.isActive !== undefined ? (editForm.isActive ? 'active' : 'inactive') : (selectedEmployee.isActive ? 'active' : 'inactive'))
-                      : (selectedEmployee.isActive ? 'active' : 'inactive')
-                    }
-                    onChange={(e) => {
-                      if (isEditMode) {
-                        setEditForm({ ...editForm, isActive: e.target.value === 'active' });
-                      }
-                    }}
-                    disabled={!isEditMode}
+                    value={editForm.isActive !== undefined ? (editForm.isActive ? 'active' : 'inactive') : (selectedEmployee.isActive ? 'active' : 'inactive')}
+                    onChange={(e) => setEditForm({ ...editForm, isActive: e.target.value === 'active' })}
                   />
                 </div>
                 <div>
@@ -1381,13 +1346,8 @@ export function Employees() {
                       { value: 'true', label: 'Active' },
                       { value: 'false', label: 'Inactive' },
                     ]}
-                    value={String(isEditMode ? (editForm.isActive ?? selectedEmployee.isActive) : selectedEmployee.isActive)}
-                    onChange={(e) => {
-                      if (isEditMode) {
-                        setEditForm({ ...editForm, isActive: e.target.value === 'true' });
-                      }
-                    }}
-                    disabled={!isEditMode}
+                    value={String(editForm.isActive ?? selectedEmployee.isActive)}
+                    onChange={(e) => setEditForm({ ...editForm, isActive: e.target.value === 'true' })}
                   />
                 </div>
               </div>
@@ -1404,56 +1364,32 @@ export function Employees() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">부서명</label>
-                  {isEditMode ? (
-                    <Input
-                      value={editForm.department || ''}
-                      onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
-                    />
-                  ) : (
-                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                      {selectedEmployee.department}
-                    </div>
-                  )}
+                  <Input
+                    value={editForm.department || ''}
+                    onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">직급</label>
-                  {isEditMode ? (
-                    <Input
-                      value={editForm.position || ''}
-                      onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
-                    />
-                  ) : (
-                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                      {selectedEmployee.position}
-                    </div>
-                  )}
+                  <Input
+                    value={editForm.position || ''}
+                    onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">연락처</label>
-                  {isEditMode ? (
-                    <Input
-                      value={editForm.phone || ''}
-                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                    />
-                  ) : (
-                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                      {selectedEmployee.phone || '-'}
-                    </div>
-                  )}
+                  <Input
+                    value={editForm.phone || ''}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">생년월일</label>
-                  {isEditMode ? (
-                    <Input
-                      type="date"
-                      value={editForm.birthDate || ''}
-                      onChange={(e) => setEditForm({ ...editForm, birthDate: e.target.value })}
-                    />
-                  ) : (
-                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                      {editForm.birthDate || '-'}
-                    </div>
-                  )}
+                  <Input
+                    type="date"
+                    value={editForm.birthDate || ''}
+                    onChange={(e) => setEditForm({ ...editForm, birthDate: e.target.value })}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">직위</label>
@@ -1468,7 +1404,7 @@ export function Employees() {
                     </div>
                   )}
                 </div>
-                {isEditMode && currentUser?.level === 1 && (
+                {currentUser?.level === 1 && (
                   <div>
                     <label className="block text-sm text-dark-text-secondary mb-1">권한 레벨</label>
                     <Select
@@ -1495,15 +1431,27 @@ export function Employees() {
                   <label className="block text-sm text-dark-text-secondary mb-1">
                     현재 비밀번호
                   </label>
-                  <Input
-                    type="password"
-                    value={passwordForm.currentPassword}
-                    onChange={(e) =>
-                      setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
-                    }
-                    placeholder="***********"
-                    disabled={!isEditMode}
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={passwordForm.currentPassword}
+                      onChange={(e) =>
+                        setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+                      }
+                      placeholder="***********"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-dark-text-400 hover:text-dark-text-100 transition-colors"
+                    >
+                      {showCurrentPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                   <p className="mt-1 text-xs text-dark-text-secondary">
                     영문(대/소문자), 숫자, 특수문자를 사용하여 8~16자로 설정해주세요.
                   </p>
@@ -1512,15 +1460,27 @@ export function Employees() {
                   <label className="block text-sm text-dark-text-secondary mb-1">
                     변경 비밀번호
                   </label>
-                  <Input
-                    type="password"
-                    value={passwordForm.newPassword}
-                    onChange={(e) =>
-                      setPasswordForm({ ...passwordForm, newPassword: e.target.value })
-                    }
-                    placeholder="******"
-                    disabled={!isEditMode}
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={passwordForm.newPassword}
+                      onChange={(e) =>
+                        setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                      }
+                      placeholder="******"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-dark-text-400 hover:text-dark-text-100 transition-colors"
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                   <p
                     className={`mt-1 text-xs ${
                       passwordForm.newPassword &&
@@ -1548,15 +1508,19 @@ export function Employees() {
 
             {/* 액션 버튼 */}
             <div className="flex items-center justify-between pt-4 border-t border-dark-line-700">
-              <div className="flex space-x-2">
+              <div>
                 <Button
-                  variant="danger"
+                  variant={selectedEmployee.isActive ? 'danger' : 'primary'}
                   onClick={() => {
-                    setSelectedEmployee(selectedEmployee);
-                    setIsResetPasswordModalOpen(true);
+                    if (selectedEmployee.isActive) {
+                      setSelectedEmployee(selectedEmployee);
+                      setIsDeleteModalOpen(true);
+                    } else {
+                      handleToggleActive();
+                    }
                   }}
                 >
-                  비밀번호 초기화
+                  {selectedEmployee.isActive ? '비활성화' : '활성화'}
                 </Button>
               </div>
               <div className="flex space-x-2">
@@ -1566,30 +1530,13 @@ export function Employees() {
                     setIsDetailModalOpen(false);
                     setIsEditMode(false);
                     setSelectedEmployee(null);
+                    setShowCurrentPassword(false);
+                    setShowNewPassword(false);
                   }}
                 >
                   취소
                 </Button>
-                {!isEditMode ? (
-                  <Button onClick={() => setIsEditMode(true)}>수정하기</Button>
-                ) : (
-                  <>
-                    <Button
-                      variant={selectedEmployee.isActive ? 'danger' : 'primary'}
-                      onClick={() => {
-                        if (selectedEmployee.isActive) {
-                          setSelectedEmployee(selectedEmployee);
-                          setIsDeleteModalOpen(true);
-                        } else {
-                          handleToggleActive();
-                        }
-                      }}
-                    >
-                      {selectedEmployee.isActive ? '비활성화' : '활성화'}
-                    </Button>
-                    <Button onClick={handleUpdate}>저장</Button>
-                  </>
-                )}
+                <Button onClick={handleUpdate} className="w-[300px]">저장</Button>
               </div>
             </div>
           </div>
