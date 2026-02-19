@@ -62,6 +62,9 @@ export function Employees() {
     employeeId?: string;
   }>({});
 
+  // 생성된 비밀번호 상태
+  const [generatedPassword, setGeneratedPassword] = useState<string>('');
+
   // 직원등록 완료 상태
   const [isEmployeeRegistered, setIsEmployeeRegistered] = useState(false);
   const [registeredEmployee, setRegisteredEmployee] = useState<User | null>(null);
@@ -214,6 +217,38 @@ export function Employees() {
   };
 
   // 필드 유효성 검사
+  // 비밀번호 자동 생성 함수 (8~16자, 3종 이상 조합)
+  const generatePassword = (): string => {
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    
+    // 최소 1개씩 포함하여 3종 이상 조합
+    const length = Math.floor(Math.random() * 9) + 8; // 8~16자
+    let password = '';
+    
+    // 각 종류에서 최소 1개씩 선택
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += special[Math.floor(Math.random() * special.length)];
+    
+    // 나머지 자리 채우기
+    const allChars = lowercase + uppercase + numbers + special;
+    for (let i = password.length; i < length; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+    
+    // 섞기
+    return password.split('').sort(() => Math.random() - 0.5).join('');
+  };
+
+  const handleGeneratePassword = () => {
+    const newPassword = generatePassword();
+    setGeneratedPassword(newPassword);
+  };
+
   const validateField = (field: 'name' | 'email' | 'employeeId', value: string) => {
     const errors: typeof fieldErrors = { ...fieldErrors };
 
@@ -1049,6 +1084,7 @@ export function Employees() {
         onClose={() => {
           setIsInviteModalOpen(false);
           setFieldErrors({});
+          setGeneratedPassword('');
           setInviteForm({
             email: '',
             name: '',
@@ -1148,12 +1184,53 @@ export function Employees() {
             <p className="mt-1 text-xs text-dark-text-400">기본값: 오늘</p>
           </div>
 
+          {/* 신규 비밀번호 자동생성 */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm text-dark-text-secondary">신규 비밀번호</label>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleGeneratePassword}
+                className="text-xs"
+              >
+                비밀번호 자동생성
+              </Button>
+            </div>
+            {generatedPassword && (
+              <div className="mt-2 p-3 rounded-bdg-10 border border-[#444444] bg-[rgba(2,6,23,.25)]">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-xs text-dark-text-400 mb-1">생성된 비밀번호:</p>
+                    <p className="text-sm font-mono text-dark-text-100 break-all">{generatedPassword}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedPassword);
+                      addToast('비밀번호가 클립보드에 복사되었습니다.', 'success');
+                    }}
+                    className="ml-2 px-2 py-1 text-xs text-mint-400 hover:text-mint-300 border border-mint-400 rounded hover:bg-mint-400 hover:bg-opacity-10 transition-colors"
+                  >
+                    복사
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-dark-text-400">8~16자이며 영문(대소문자), 숫자, 특수문자 조합</p>
+              </div>
+            )}
+            {!generatedPassword && (
+              <p className="mt-1 text-xs text-dark-text-400">8~16자이며 3종 이상 조합</p>
+            )}
+          </div>
+
           <div className="flex justify-end space-x-2 pt-4 border-t border-[#444444]">
             <Button
               variant="secondary"
               onClick={() => {
                 setIsInviteModalOpen(false);
                 setFieldErrors({});
+                setGeneratedPassword('');
                 setInviteForm({
                   email: '',
                   name: '',
