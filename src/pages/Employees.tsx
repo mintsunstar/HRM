@@ -47,6 +47,9 @@ export function Employees() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
+  // 마지막 변경일자
+  const [lastUpdatedDate, setLastUpdatedDate] = useState<string | null>(null);
+
   // 초대 폼
   const [inviteForm, setInviteForm] = useState({
     email: '',
@@ -517,6 +520,7 @@ export function Employees() {
     });
     setShowCurrentPassword(false);
     setShowNewPassword(false);
+    setLastUpdatedDate(null); // 모달 열 때 초기화
     setIsEditMode(true); // 기본적으로 수정 가능한 상태
     setIsDetailModalOpen(true);
   };
@@ -531,6 +535,17 @@ export function Employees() {
 
     try {
       await usersApi.updateUser(selectedEmployee.id, editForm);
+      
+      // 마지막 변경일자 저장 (YYYY-MM-DD HH:mm 형식)
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}`;
+      setLastUpdatedDate(formattedDate);
+      
       addToast('직원 정보가 수정되었습니다.', 'success');
       setIsEditMode(false);
       fetchEmployees();
@@ -1244,6 +1259,7 @@ export function Employees() {
           setSelectedEmployee(null);
           setShowCurrentPassword(false);
           setShowNewPassword(false);
+          setLastUpdatedDate(null);
         }}
         title="직원정보 상세보기"
         size="xl"
@@ -1461,37 +1477,47 @@ export function Employees() {
             </div>
 
             {/* 액션 버튼 */}
-            <div className="flex items-center justify-between pt-4 border-t border-dark-line-700">
-              <div>
-                <Button
-                  variant={selectedEmployee.isActive ? 'danger' : 'primary'}
-                  onClick={() => {
-                    if (selectedEmployee.isActive) {
-                      setSelectedEmployee(selectedEmployee);
-                      setIsDeleteModalOpen(true);
-                    } else {
-                      handleToggleActive();
-                    }
-                  }}
-                >
-                  {selectedEmployee.isActive ? '비활성화' : '활성화'}
-                </Button>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between pt-4 border-t border-dark-line-700">
+                <div>
+                  <Button
+                    variant={selectedEmployee.isActive ? 'danger' : 'primary'}
+                    onClick={() => {
+                      if (selectedEmployee.isActive) {
+                        setSelectedEmployee(selectedEmployee);
+                        setIsDeleteModalOpen(true);
+                      } else {
+                        handleToggleActive();
+                      }
+                    }}
+                  >
+                    {selectedEmployee.isActive ? '비활성화' : '활성화'}
+                  </Button>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setIsDetailModalOpen(false);
+                      setIsEditMode(false);
+                      setSelectedEmployee(null);
+                      setShowCurrentPassword(false);
+                      setShowNewPassword(false);
+                      setLastUpdatedDate(null);
+                    }}
+                  >
+                    취소
+                  </Button>
+                  <Button onClick={handleUpdate} className="w-[300px]">저장</Button>
+                </div>
               </div>
-              <div className="flex space-x-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setIsDetailModalOpen(false);
-                    setIsEditMode(false);
-                    setSelectedEmployee(null);
-                    setShowCurrentPassword(false);
-                    setShowNewPassword(false);
-                  }}
-                >
-                  취소
-                </Button>
-                <Button onClick={handleUpdate} className="w-[300px]">저장</Button>
-              </div>
+              {lastUpdatedDate && (
+                <div className="text-right">
+                  <p className="text-xs text-dark-text-400">
+                    마지막 변경일자: {lastUpdatedDate}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
