@@ -297,7 +297,7 @@ export function Employees() {
 
   const handleRegisterEmployee = async () => {
     // 필수 필드 검증
-    if (!inviteForm.name || !inviteForm.email || !inviteForm.employeeId) {
+    if (!inviteForm.name || !inviteForm.email) {
       addToast('필수 항목을 모두 입력해주세요.', 'error');
       return;
     }
@@ -322,13 +322,6 @@ export function Employees() {
     if (existingEmail) {
       setFieldErrors({ ...fieldErrors, email: '이미 등록된 이메일입니다.' });
       addToast('이미 등록된 이메일입니다.', 'error');
-      return;
-    }
-
-    const existingEmployeeId = employees.find((e) => e.employeeId === inviteForm.employeeId);
-    if (existingEmployeeId) {
-      setFieldErrors({ ...fieldErrors, employeeId: '이미 사용 중인 사번입니다.' });
-      addToast('이미 사용 중인 사번입니다.', 'error');
       return;
     }
 
@@ -1146,24 +1139,7 @@ export function Employees() {
             )}
           </div>
 
-          {/* 3. 사번 */}
-          <div>
-            <Input
-              label="사번 (필수)"
-              value={inviteForm.employeeId}
-              onChange={(e) => {
-                setInviteForm({ ...inviteForm, employeeId: e.target.value });
-                validateField('employeeId', e.target.value);
-              }}
-              placeholder="0008"
-              required
-            />
-            {fieldErrors.employeeId && (
-              <p className="mt-1 text-xs text-red-500">{fieldErrors.employeeId}</p>
-            )}
-          </div>
-
-          {/* 4. 권한 레벨 */}
+          {/* 3. 권한 레벨 */}
           <Select
             label="권한 레벨 (필수)"
             options={[
