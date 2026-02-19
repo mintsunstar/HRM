@@ -1393,33 +1393,11 @@ export function Employees() {
                 </div>
                 <div>
                   <label className="block text-sm text-dark-text-secondary mb-1">직위</label>
-                  {isEditMode ? (
-                    <Input
-                      value={editForm.jobTitle || ''}
-                      onChange={(e) => setEditForm({ ...editForm, jobTitle: e.target.value })}
-                    />
-                  ) : (
-                    <div className="px-4 py-2 bg-[rgba(2,6,23,.25)] border border-[#444444] rounded-bdg-10 text-dark-text-100">
-                      {editForm.jobTitle || selectedEmployee.position}
-                    </div>
-                  )}
+                  <Input
+                    value={editForm.jobTitle || ''}
+                    onChange={(e) => setEditForm({ ...editForm, jobTitle: e.target.value })}
+                  />
                 </div>
-                {currentUser?.level === 1 && (
-                  <div>
-                    <label className="block text-sm text-dark-text-secondary mb-1">권한 레벨</label>
-                    <Select
-                      options={[
-                        { value: '3', label: 'User (Level 3)' },
-                        { value: '2', label: 'Admin (Level 2)' },
-                        { value: '1', label: 'Super Admin (Level 1)' },
-                      ]}
-                      value={String(editForm.level || 3)}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, level: Number(e.target.value) as UserLevel })
-                      }
-                    />
-                  </div>
-                )}
               </div>
             </div>
 
